@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/listen")({
   component: ListenPage,
   head: () => ({
     meta: [
-      { title: "Listening Mode — Sunlit Voice" },
+      { title: "Listening Mode — VoiceBridge" },
       { name: "description", content: "Voice-controlled assistant to search and play donated voice messages." },
     ],
   }),

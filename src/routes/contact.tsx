@@ -9,10 +9,10 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
   head: () => ({
     meta: [
-      { title: "Contact Us — Sunlit Voice" },
-      { name: "description", content: "Get in touch with the Sunlit Voice team. We reply within 1–2 business days." },
-      { property: "og:title", content: "Contact Us — Sunlit Voice" },
-      { property: "og:description", content: "Get in touch with the Sunlit Voice team. We reply within 1–2 business days." },
+      { title: "Contact Us — VoiceBridge" },
+      { name: "description", content: "Get in touch with the VoiceBridge team. We reply within 1–2 business days." },
+      { property: "og:title", content: "Contact Us — VoiceBridge" },
+      { property: "og:description", content: "Get in touch with the VoiceBridge team. We reply within 1–2 business days." },
     ],
   }),
 });

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Sunlit Voice" },
+      { title: "Sign in — VoiceBridge" },
       { name: "description", content: "Sign in or create an account to donate and listen." },
     ],
   }),
