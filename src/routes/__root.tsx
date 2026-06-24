@@ -24,7 +24,7 @@ function NotFoundComponent() {
         <h1 className="text-7xl font-bold">404</h1>
         <h2 className="mt-4 text-2xl">Page not found</h2>
         <p className="mt-2 text-muted-foreground">
-          That page doesn't exist. Let's get you back to VoiceBridge.
+          That page doesn't exist. Let's get you back to SunlitVoice.
         </p>
         <div className="mt-6">
           <Link
@@ -77,13 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VoiceBridge — Voice-first companion for blind and low-vision users" },
+      { title: "SunlitVoice — Voice-first companion for blind and low-vision users" },
       { name: "description", content: "Donate your voice and listen by voice. An accessible, multilingual (English + Burmese) voice-first platform." },
       { name: "theme-color", content: "#3fa66b" },
-      { property: "og:title", content: "VoiceBridge — Voice-first companion for blind and low-vision users" },
+      { property: "og:title", content: "SunlitVoice — Voice-first companion for blind and low-vision users" },
       { property: "og:description", content: "Donate your voice and listen by voice. An accessible, multilingual (English + Burmese) voice-first platform." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "VoiceBridge — Voice-first companion for blind and low-vision users" },
+      { name: "twitter:title", content: "SunlitVoice — Voice-first companion for blind and low-vision users" },
       { name: "twitter:description", content: "Donate your voice and listen by voice. An accessible, multilingual (English + Burmese) voice-first platform." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2d29e0d7-6c87-4421-b696-f06f24ef5fed/id-preview-abbede0a--331173ed-67b2-4676-912a-1c26b8f31588.lovable.app-1782291240620.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2d29e0d7-6c87-4421-b696-f06f24ef5fed/id-preview-abbede0a--331173ed-67b2-4676-912a-1c26b8f31588.lovable.app-1782291240620.png" },

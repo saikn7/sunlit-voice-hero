@@ -6,7 +6,7 @@ export const Route = createFileRoute("/")({
   component: HomePage,
   head: () => ({
     meta: [
-      { title: "VoiceBridge — Accessibility-first audio platform" },
+      { title: "SunlitVoice — Accessibility-first audio platform" },
       { name: "description", content: "Donate your voice. Open the world for someone who can't see it. Voice-first audio donations and listening for blind and visually impaired users." },
     ],
   }),
@@ -40,7 +40,7 @@ function HomePage() {
               Donate your voice. Open the world for someone who can't see it.
             </h1>
             <p className="mt-6 max-w-xl text-lg text-foreground/80 md:text-xl">
-              VoiceBridge brings together donated recordings — lessons, stories, news, motivation — so blind and visually impaired users can listen, learn, and live more independently, all through simple voice commands.
+              SunlitVoice brings together donated recordings — lessons, stories, news, motivation — so blind and visually impaired users can listen, learn, and live more independently, all through simple voice commands.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
@@ -173,7 +173,7 @@ function HomePage() {
             className="text-balance text-3xl leading-snug md:text-4xl"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            "I can finally hear lessons in my own language whenever I want. VoiceBridge feels like a friend reading to me."
+            "I can finally hear lessons in my own language whenever I want. SunlitVoice feels like a friend reading to me."
           </blockquote>
           <p className="mt-4 text-base text-muted-foreground">— Early user</p>
           <div className="mt-10 flex flex-wrap justify-center gap-3">
