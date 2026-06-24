@@ -37,7 +37,7 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
         <nav aria-label="Primary" className="ml-2 flex flex-wrap items-center gap-1">
           {navItem("/", t("home"))}
           {navItem("/browse", "Browse")}
-          {user && navItem("/donate", "Donate Voice")}
+          {navItem("/donate", "Donate Voice")}
           {navItem("/contact", t("contact"))}
         </nav>
 
