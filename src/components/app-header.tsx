@@ -57,6 +57,17 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
             {theme === "dark" ? "🌙" : "☀️"}
           </button>
 
+          <button
+            type="button"
+            onClick={() => setContrast(!contrast)}
+            className={`rounded-md border border-border px-3 py-2 text-base font-semibold hover:bg-secondary ${contrast ? "bg-primary text-primary-foreground" : ""}`}
+            aria-pressed={contrast}
+            aria-label="High contrast mode"
+            title="High contrast"
+          >
+            ◐
+          </button>
+
           {user ? (
             <button
               type="button"
