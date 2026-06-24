@@ -41,19 +41,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       },
-      signUp: async (email, password, displayName) => {
+      signUp: async (email, password, displayName, userType) => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-            data: displayName ? { display_name: displayName } : undefined,
+            data: {
+              ...(displayName ? { display_name: displayName } : {}),
+              ...(userType ? { user_type: userType } : {}),
+            },
           },
         });
         if (error) throw error;
       },
       signOut: async () => {
         await supabase.auth.signOut();
+      },
+      resetPassword: async (email) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined,
+        });
+        if (error) throw error;
       },
     }),
     [session, loading],
