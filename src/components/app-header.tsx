@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { LANGS, type Lang } from "@/lib/i18n";
 
 export function AppHeader(_props: { onOpenContact?: () => void }) {
-  const { t, lang, setLang, theme, setTheme } = usePrefs();
+  const { t, lang, setLang, theme, setTheme, contrast, setContrast } = usePrefs();
   const { user, signOut } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
