@@ -32,6 +32,7 @@
   --color-listening: var(--listening);
   --font-display: var(--font-display);
   --shadow-elevated: var(--shadow-elevated);
+  --gradient-hero: var(--gradient-hero);
 }
 
 /* Light theme (default) – soft sunlit green */
