@@ -62,9 +62,9 @@ const dict = {
     untitled: "Untitled donation",
   },
   my: {
-    appName: "Sunlit Voice",
+    appName: "VoiceBridge",
     tagline: "လူတိုင်းအတွက် အသံဦးစားပေး လက်တွဲဖော်။",
-    welcomeGreeting: "Sunlit Voice သို့ ကြိုဆိုပါတယ်။ နားထောင်ရန် ခလုတ်ကြီးကို နှိပ်ပါ၊ သို့မဟုတ် သင့်အသံကို လှူဒါန်းပါ။",
+    welcomeGreeting: "VoiceBridge သို့ ကြိုဆိုပါတယ်။ Help, Open Profile, Find Audio, သို့မဟုတ် Donate Voice ဟု ပြောနိုင်ပါသည်။",
     startListening: "နားထောင်ရန် စတင်ပါ",
     stopListening: "နားထောင်ခြင်း ရပ်ပါ",
     donateYourVoice: "သင့်အသံကို လှူဒါန်းပါ",
