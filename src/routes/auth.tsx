@@ -24,7 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const { signIn, signUp, resetPassword, user, loading } = useAuth();
-  const { t } = usePrefs();
+  const { t, lang } = usePrefs();
   const { redirect: redirectTo } = useSearch({ from: "/auth" });
   const navigate = useNavigate();
 
@@ -43,33 +43,84 @@ function AuthPage() {
   const [fpEmail, setFpEmail] = React.useState("");
 
   const [busy, setBusy] = React.useState(false);
-  const [msg, setMsg] = React.useState<{ kind: "error" | "ok"; text: string } | null>(null);
+  const [msg, setMsg] = React.useState<{ kind: "error" | "ok" | "warn"; text: string } | null>(null);
+  const [suCooldown, setSuCooldown] = React.useState(0);
+  const [fpCooldown, setFpCooldown] = React.useState(0);
+
+  // Tick cooldowns once per second
+  React.useEffect(() => {
+    if (suCooldown <= 0 && fpCooldown <= 0) return;
+    const id = setInterval(() => {
+      setSuCooldown((s) => (s > 0 ? s - 1 : 0));
+      setFpCooldown((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [suCooldown, fpCooldown]);
+
+  function describeError(err: unknown): { text: string; rateLimited: boolean } {
+    const raw = (err as Error)?.message || String(err);
+    const low = raw.toLowerCase();
+    const rateLimited =
+      low.includes("rate limit") ||
+      low.includes("over_email_send_rate_limit") ||
+      low.includes("too many requests") ||
+      low.includes("429");
+    if (rateLimited) {
+      return {
+        text:
+          lang === "my"
+            ? "အီးမေးလ် ပို့ခွင့် ကန့်သတ်ထားသည်။ ၁ နာရီခန့် စောင့်ပြီး ထပ်ကြိုးစားပါ။"
+            : "Email send rate limit reached. Please wait about an hour before trying again, or use a different email.",
+        rateLimited: true,
+      };
+    }
+    return { text: raw, rateLimited: false };
+  }
 
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setMsg(null);
     try { await signIn(siEmail, siPassword); }
-    catch (err) { setMsg({ kind: "error", text: (err as Error).message }); }
+    catch (err) { setMsg({ kind: "error", text: describeError(err).text }); }
     finally { setBusy(false); }
   }
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
+    if (suCooldown > 0) return;
     setBusy(true); setMsg(null);
     try {
       await signUp(suEmail, suPassword, suName || undefined, suRole);
       setMsg({ kind: "ok", text: t("accountCreated") });
-    } catch (err) { setMsg({ kind: "error", text: (err as Error).message }); }
+      setSuCooldown(60);
+    } catch (err) {
+      const d = describeError(err);
+      setMsg({ kind: d.rateLimited ? "warn" : "error", text: d.text });
+      if (d.rateLimited) setSuCooldown(300); // 5 min lockout on rate-limit
+    }
     finally { setBusy(false); }
   }
   async function onReset(e: React.FormEvent) {
     e.preventDefault();
+    if (fpCooldown > 0) return;
     setBusy(true); setMsg(null);
     try {
       await resetPassword(fpEmail);
       setMsg({ kind: "ok", text: t("resetSent") });
-    } catch (err) { setMsg({ kind: "error", text: (err as Error).message }); }
+      setFpCooldown(60);
+    } catch (err) {
+      const d = describeError(err);
+      setMsg({ kind: d.rateLimited ? "warn" : "error", text: d.text });
+      if (d.rateLimited) setFpCooldown(300);
+    }
     finally { setBusy(false); }
   }
+
+  const suLabel = suCooldown > 0
+    ? (lang === "my" ? `ထပ်ပို့ရန် ${suCooldown}s` : `Resend in ${suCooldown}s`)
+    : (busy ? "…" : t("createAccountBtn"));
+  const fpLabel = fpCooldown > 0
+    ? (lang === "my" ? `ထပ်ပို့ရန် ${fpCooldown}s` : `Resend in ${fpCooldown}s`)
+    : (busy ? "…" : t("sendResetLink"));
 
   return (
     <div className="mx-auto max-w-md">
@@ -126,7 +177,7 @@ function AuthPage() {
               </div>
             </fieldset>
             {msg && <Notice msg={msg} />}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "…" : t("createAccountBtn")}</Button>
+            <Button type="submit" disabled={busy || suCooldown > 0} className="w-full">{suLabel}</Button>
           </form>
         </TabsContent>
 
@@ -137,7 +188,7 @@ function AuthPage() {
               <Input id="fp-email" type="email" required value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} />
             </div>
             {msg && <Notice msg={msg} />}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "…" : t("sendResetLink")}</Button>
+            <Button type="submit" disabled={busy || fpCooldown > 0} className="w-full">{fpLabel}</Button>
           </form>
         </TabsContent>
       </Tabs>
@@ -149,10 +200,13 @@ function AuthPage() {
   );
 }
 
-function Notice({ msg }: { msg: { kind: "error" | "ok"; text: string } }) {
+function Notice({ msg }: { msg: { kind: "error" | "ok" | "warn"; text: string } }) {
+  const cls =
+    msg.kind === "error" ? "bg-destructive/15 text-destructive"
+    : msg.kind === "warn" ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300"
+    : "bg-primary/10 text-foreground";
   return (
-    <p role={msg.kind === "error" ? "alert" : "status"}
-       className={`rounded-md px-3 py-2 text-sm ${msg.kind === "error" ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-foreground"}`}>
+    <p role={msg.kind === "error" ? "alert" : "status"} className={`rounded-md px-3 py-2 text-sm ${cls}`}>
       {msg.text}
     </p>
   );
