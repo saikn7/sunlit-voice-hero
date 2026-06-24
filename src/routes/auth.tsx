@@ -188,7 +188,7 @@ function AuthPage() {
               <Input id="fp-email" type="email" required value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} />
             </div>
             {msg && <Notice msg={msg} />}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "…" : t("sendResetLink")}</Button>
+            <Button type="submit" disabled={busy || fpCooldown > 0} className="w-full">{fpLabel}</Button>
           </form>
         </TabsContent>
       </Tabs>
