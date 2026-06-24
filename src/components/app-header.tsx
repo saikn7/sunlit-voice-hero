@@ -3,37 +3,9 @@ import { usePrefs } from "@/lib/prefs-context";
 import { useAuth } from "@/lib/auth-context";
 import { LANGS, type Lang } from "@/lib/i18n";
 
-function PillToggle({
-  label,
-  on,
-  onClick,
-}: {
-  label: string;
-  on: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={on}
-      className="flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <span
-        aria-hidden
-        className={`relative inline-block h-5 w-9 rounded-full transition ${on ? "bg-primary" : "bg-border"}`}
-      >
-        <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-card shadow transition ${on ? "left-[18px]" : "left-0.5"}`}
-        />
-      </span>
-      {label}
-    </button>
-  );
-}
-
 export function AppHeader(_props: { onOpenContact?: () => void }) {
-  const { t, lang, setLang, theme, setTheme, contrast, setContrast } = usePrefs();
+  const { t, lang, setLang, theme, setTheme } = usePrefs();
+
   const { user, signOut } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
