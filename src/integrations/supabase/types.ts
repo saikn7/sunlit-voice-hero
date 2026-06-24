@@ -88,28 +88,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accessibility_mode: boolean
           created_at: string
           display_name: string | null
+          high_contrast: boolean
           id: string
           language: string
           theme: string
           updated_at: string
+          user_type: string
         }
         Insert: {
+          accessibility_mode?: boolean
           created_at?: string
           display_name?: string | null
+          high_contrast?: boolean
           id: string
           language?: string
           theme?: string
           updated_at?: string
+          user_type?: string
         }
         Update: {
+          accessibility_mode?: boolean
           created_at?: string
           display_name?: string | null
+          high_contrast?: boolean
           id?: string
           language?: string
           theme?: string
           updated_at?: string
+          user_type?: string
         }
         Relationships: []
       }
