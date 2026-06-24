@@ -198,6 +198,22 @@ function ListenPage() {
     cancelSpeech();
   }, []);
 
+  // Global Space toggles listening; Escape always stops. Ignore when typing in form fields.
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const isField = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target as HTMLElement | null)?.isContentEditable;
+      if (e.code === "Space" && !isField) {
+        e.preventDefault();
+        if (listening) stopListening(); else startListening();
+      } else if (e.key === "Escape") {
+        if (listening) stopListening();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [listening, startListening, stopListening]);
+
   return (
     <div className="grid gap-6">
       <h1 className="text-3xl font-bold">{t("listeningMode")}</h1>
