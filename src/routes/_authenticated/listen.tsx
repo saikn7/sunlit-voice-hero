@@ -98,25 +98,31 @@ function ListenPage() {
     pushMsg("you", text);
     const low = text.toLowerCase();
 
-    if (/(^|\s)(stop|cancel|quiet|silent|ရပ်)/.test(low)) {
+    // Stop / cancel
+    if (/(^|\s)(stop|cancel|quiet|silent)\b|ရပ်/.test(low)) {
       cancelSpeech();
       if (audioRef.current) audioRef.current.pause();
       respond(lang === "my" ? "ရပ်လိုက်ပါပြီ။" : "Stopped.");
       return;
     }
-    if (/\b(go to|open|navigate)\b.*\bdonate\b|လှူ/.test(low)) {
-      respond(lang === "my" ? "လှူဒါန်းမှု စာမျက်နှာသို့ သွားနေသည်။" : "Opening donate.");
-      navigate({ to: "/donate" });
-      return;
-    }
-    if (/\bhome\b|ပင်မ/.test(low)) {
-      respond(lang === "my" ? "ပင်မသို့ သွားနေသည်။" : "Going home.");
-      navigate({ to: "/" });
-      return;
-    }
-    if (/\bhelp\b/.test(low)) {
+    // Help
+    if (/\bhelp\b|အကူအညီ/.test(low)) {
       respond(t("listeningHint"));
       return;
+    }
+    // Navigation intents (EN + MY)
+    const nav: { re: RegExp; to: "/" | "/donate" | "/contact" | "/listen"; en: string; my: string }[] = [
+      { re: /\b(go )?home\b|ပင်မ|အိမ်/, to: "/", en: "Going home.", my: "ပင်မသို့ သွားနေသည်။" },
+      { re: /\bdonate\b|လှူ/, to: "/donate", en: "Opening donate.", my: "လှူဒါန်းမှု စာမျက်နှာသို့ သွားနေသည်။" },
+      { re: /\bcontact\b|ဆက်သွယ်/, to: "/contact", en: "Opening contact.", my: "ဆက်သွယ်ရန် စာမျက်နှာ ဖွင့်နေသည်။" },
+      { re: /\b(profile|dashboard|listen)\b|ပရိုဖိုင်/, to: "/listen", en: "Opening your library.", my: "သင်၏ စာရင်း ဖွင့်နေသည်။" },
+    ];
+    for (const n of nav) {
+      if (n.re.test(low)) {
+        respond(lang === "my" ? n.my : n.en);
+        navigate({ to: n.to });
+        return;
+      }
     }
 
     // Search / play patterns
@@ -128,7 +134,7 @@ function ListenPage() {
     else if (searchMatch) { term = searchMatch[1]; intent = "search"; }
     else { term = text; }
 
-    if (/^(first|the first|ပထမ)$/.test(term)) {
+    if (/^(latest|newest|first|the first|ပထမ|နောက်ဆုံး)$/.test(term)) {
       const first = filtered[0] ?? donations[0];
       if (first) {
         respond(`${t("play")}: ${first.title}`);
@@ -191,6 +197,22 @@ function ListenPage() {
     try { recognizerRef.current?.abort(); } catch {}
     cancelSpeech();
   }, []);
+
+  // Global Space toggles listening; Escape always stops. Ignore when typing in form fields.
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const isField = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target as HTMLElement | null)?.isContentEditable;
+      if (e.code === "Space" && !isField) {
+        e.preventDefault();
+        if (listening) stopListening(); else startListening();
+      } else if (e.key === "Escape") {
+        if (listening) stopListening();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [listening, startListening, stopListening]);
 
   return (
     <div className="grid gap-6">

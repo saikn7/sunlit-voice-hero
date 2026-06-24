@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { LANGS, type Lang } from "@/lib/i18n";
 
 export function AppHeader(_props: { onOpenContact?: () => void }) {
-  const { t, lang, setLang, theme, setTheme } = usePrefs();
+  const { t, lang, setLang, theme, setTheme, contrast, setContrast } = usePrefs();
   const { user, signOut } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -55,6 +55,17 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
             aria-label={`${t("theme")}: ${theme === "dark" ? t("dark") : t("light")}`}
           >
             {theme === "dark" ? "🌙" : "☀️"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setContrast(!contrast)}
+            className={`rounded-md border border-border px-3 py-2 text-base font-semibold hover:bg-secondary ${contrast ? "bg-primary text-primary-foreground" : ""}`}
+            aria-pressed={contrast}
+            aria-label="High contrast mode"
+            title="High contrast"
+          >
+            ◐
           </button>
 
           {user ? (

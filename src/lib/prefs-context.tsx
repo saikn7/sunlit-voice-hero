@@ -8,20 +8,31 @@ type Theme = "light" | "dark";
 type PrefsCtx = {
   lang: Lang;
   theme: Theme;
+  contrast: boolean;
+  demoMode: boolean;
   setLang: (l: Lang) => void;
   setTheme: (th: Theme) => void;
+  setContrast: (v: boolean) => void;
+  setDemoMode: (v: boolean) => void;
   t: (key: TKey) => string;
 };
 
 const Ctx = React.createContext<PrefsCtx | null>(null);
 const LS_LANG = "sv_lang";
 const LS_THEME = "sv_theme";
+const LS_CONTRAST = "sv_contrast";
+const LS_DEMO = "sv_demo";
 
 function applyTheme(theme: Theme) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.classList.toggle("dark", theme === "dark");
   root.style.colorScheme = theme;
+}
+
+function applyContrast(on: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("contrast-high", on);
 }
 
 function detectInitialLang(): Lang {
@@ -44,17 +55,22 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [lang, setLangState] = React.useState<Lang>("en");
   const [theme, setThemeState] = React.useState<Theme>("light");
+  const [contrast, setContrastState] = React.useState(false);
+  const [demoMode, setDemoModeState] = React.useState(false);
 
-  // Hydrate on mount (client only).
   React.useEffect(() => {
     const l = detectInitialLang();
     const th = detectInitialTheme();
+    const c = window.localStorage.getItem(LS_CONTRAST) === "1";
+    const d = window.localStorage.getItem(LS_DEMO) === "1";
     setLangState(l);
     setThemeState(th);
+    setContrastState(c);
+    setDemoModeState(d);
     applyTheme(th);
+    applyContrast(c);
   }, []);
 
-  // When signed in, load profile prefs.
   React.useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -91,9 +107,28 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     if (user) supabase.from("profiles").update({ theme: th }).eq("id", user.id);
   }, [user]);
 
+  const setContrast = React.useCallback((v: boolean) => {
+    setContrastState(v);
+    applyContrast(v);
+    window.localStorage.setItem(LS_CONTRAST, v ? "1" : "0");
+  }, []);
+
+  const setDemoMode = React.useCallback((v: boolean) => {
+    setDemoModeState(v);
+    window.localStorage.setItem(LS_DEMO, v ? "1" : "0");
+    if (v) {
+      // demo mode forces greeting again
+      window.sessionStorage.removeItem("sv_greeted");
+    }
+  }, []);
+
   const value: PrefsCtx = React.useMemo(
-    () => ({ lang, theme, setLang, setTheme, t: (k) => translate(lang, k) }),
-    [lang, theme, setLang, setTheme],
+    () => ({
+      lang, theme, contrast, demoMode,
+      setLang, setTheme, setContrast, setDemoMode,
+      t: (k) => translate(lang, k),
+    }),
+    [lang, theme, contrast, demoMode, setLang, setTheme, setContrast, setDemoMode],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

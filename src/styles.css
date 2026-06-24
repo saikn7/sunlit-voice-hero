@@ -85,6 +85,35 @@
   --shadow-elevated: 0 20px 50px -20px oklch(0 0 0 / 0.55);
 }
 
+/* High-contrast accessibility theme — overrides both light & dark. */
+.contrast-high {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.08 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.08 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.95 0.22 95);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.15 0 0);
+  --muted-foreground: oklch(0.95 0 0);
+  --accent: oklch(0.95 0.22 95);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.7 0.3 27);
+  --destructive-foreground: oklch(0 0 0);
+  --border: oklch(1 0 0);
+  --input: oklch(0.1 0 0);
+  --ring: oklch(0.95 0.22 95);
+  --listening: oklch(0.95 0.22 95);
+  --shadow-elevated: 0 0 0 2px oklch(1 0 0);
+}
+.contrast-high :focus-visible {
+  outline: 4px solid oklch(0.95 0.22 95);
+  outline-offset: 4px;
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html { font-size: 18px; }
