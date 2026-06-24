@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { renderAsync } from '@react-email/components'
+import { render } from '@react-email/components'
 import { parseEmailWebhookPayload } from '@lovable.dev/email-js'
 import { WebhookError, verifyWebhookRequest } from '@lovable.dev/webhooks-js'
 import { createClient } from '@supabase/supabase-js'
@@ -69,20 +69,21 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           payload = verified.payload
           run_id = payload.run_id
         } catch (error) {
+          const err = error as { code?: string; message?: string };
           if (error instanceof WebhookError) {
-            switch (error.code) {
+            switch (err.code) {
               case 'invalid_signature':
               case 'missing_timestamp':
               case 'invalid_timestamp':
               case 'stale_timestamp':
-                console.error('Invalid webhook signature', { error: error.message })
+                console.error('Invalid webhook signature', { error: err.message })
                 return Response.json(
                   { error: 'Invalid signature' },
                   { status: 401 }
                 )
               case 'invalid_payload':
               case 'invalid_json':
-                console.error('Invalid webhook payload', { error: error.message })
+                console.error('Invalid webhook payload', { error: err.message })
                 return Response.json(
                   { error: 'Invalid webhook payload' },
                   { status: 400 }
