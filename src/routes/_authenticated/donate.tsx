@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/donate")({
   component: DonatePage,
   head: () => ({
     meta: [
-      { title: "Donate Your Voice — Sunlit Voice" },
+      { title: "Donate Your Voice — VoiceBridge" },
       { name: "description", content: "Record or upload a voice message to share with the community." },
     ],
   }),

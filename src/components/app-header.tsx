@@ -3,6 +3,35 @@ import { usePrefs } from "@/lib/prefs-context";
 import { useAuth } from "@/lib/auth-context";
 import { LANGS, type Lang } from "@/lib/i18n";
 
+function PillToggle({
+  label,
+  on,
+  onClick,
+}: {
+  label: string;
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className="flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span
+        aria-hidden
+        className={`relative inline-block h-5 w-9 rounded-full transition ${on ? "bg-primary" : "bg-border"}`}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-card shadow transition ${on ? "left-[18px]" : "left-0.5"}`}
+        />
+      </span>
+      {label}
+    </button>
+  );
+}
+
 export function AppHeader(_props: { onOpenContact?: () => void }) {
   const { t, lang, setLang, theme, setTheme, contrast, setContrast } = usePrefs();
   const { user, signOut } = useAuth();
@@ -11,7 +40,7 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
   const navItem = (to: string, label: string) => (
     <Link
       to={to}
-      className={`rounded-md px-3 py-2 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`rounded-xl px-3.5 py-2 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         path === to ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
       }`}
       aria-current={path === to ? "page" : undefined}
@@ -23,23 +52,30 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary">
-          <span aria-hidden className="inline-block h-7 w-7 rounded-full bg-primary" />
-          {t("appName")}
+        <Link to="/" className="flex items-center gap-2.5 text-xl font-bold">
+          <span
+            aria-hidden
+            className="grid h-9 w-9 place-items-center rounded-full bg-primary text-lg text-primary-foreground"
+          >
+            🎤
+          </span>
+          <span style={{ fontFamily: "var(--font-display)" }}>{t("appName")}</span>
         </Link>
-        <nav aria-label="Primary" className="ml-auto flex flex-wrap items-center gap-1">
+
+        <nav aria-label="Primary" className="ml-2 flex flex-wrap items-center gap-1">
           {navItem("/", t("home"))}
-          {user && navItem("/listen", t("listen"))}
-          {user && navItem("/donate", t("donate"))}
+          {user && navItem("/listen", "Browse")}
+          {user && navItem("/donate", "Donate Voice")}
           {navItem("/contact", t("contact"))}
+        </nav>
 
-
-          <label className="ml-2 flex items-center gap-2 text-sm">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
             <span className="sr-only">{t("language")}</span>
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value as Lang)}
-              className="rounded-md border border-border bg-input px-2 py-1.5 text-base"
+              className="rounded-md border border-border bg-input px-2 py-1.5 text-sm"
               aria-label={t("language")}
             >
               {LANGS.map((l) => (
@@ -48,40 +84,34 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
             </select>
           </label>
 
-          <button
-            type="button"
+          <PillToggle
+            label="A11y"
+            on={theme === "dark"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-md border border-border px-3 py-2 text-base font-semibold hover:bg-secondary"
-            aria-label={`${t("theme")}: ${theme === "dark" ? t("dark") : t("light")}`}
-          >
-            {theme === "dark" ? "🌙" : "☀️"}
-          </button>
-
-          <button
-            type="button"
+          />
+          <PillToggle
+            label="Contrast"
+            on={contrast}
             onClick={() => setContrast(!contrast)}
-            className={`rounded-md border border-border px-3 py-2 text-base font-semibold hover:bg-secondary ${contrast ? "bg-primary text-primary-foreground" : ""}`}
-            aria-pressed={contrast}
-            aria-label="High contrast mode"
-            title="High contrast"
-          >
-            ◐
-          </button>
+          />
 
           {user ? (
             <button
               type="button"
               onClick={() => signOut()}
-              className="rounded-md bg-secondary px-3 py-2 text-base font-semibold hover:bg-accent"
+              className="rounded-xl bg-primary px-4 py-2 text-base font-bold text-primary-foreground hover:opacity-95"
             >
               {t("signOut")}
             </button>
           ) : (
-            <Link to="/auth" className="rounded-md bg-primary px-3 py-2 text-base font-semibold text-primary-foreground">
-              {t("signIn")}
+            <Link
+              to="/auth"
+              className="rounded-xl bg-primary px-4 py-2 text-base font-bold text-primary-foreground hover:opacity-95"
+            >
+              Sign in
             </Link>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
