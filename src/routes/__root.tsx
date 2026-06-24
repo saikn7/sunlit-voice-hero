@@ -7,10 +7,16 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { PrefsProvider, usePrefs } from "@/lib/prefs-context";
+import { AppHeader } from "@/components/app-header";
+import { ContactModal } from "@/components/contact-modal";
+import { speak, isSpeechSynthesisSupported } from "@/lib/speech";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -73,17 +79,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Sunlit Voice — Voice-first companion for blind and low-vision users" },
-      { name: "description", content: "An accessible voice-first assistant: dictate notes, hear them read back, ask questions, and navigate by voice or keyboard." },
-      { name: "theme-color", content: "#f6b352" },
+      { name: "description", content: "Donate your voice and listen by voice. An accessible, multilingual (English + Burmese) voice-first platform." },
+      { name: "theme-color", content: "#3fa66b" },
       { property: "og:title", content: "Sunlit Voice" },
-      { property: "og:description", content: "Voice-first, screen-reader-friendly companion." },
+      { property: "og:description", content: "Donate your voice and listen by voice. Multilingual accessible voice platform." },
       { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;700&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -106,11 +112,65 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function AppChrome() {
+  const [contactOpen, setContactOpen] = useState(false);
+  const router = useRouter();
+
+  // Auth-state-driven cache invalidation (single root subscriber).
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        router.invalidate();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  return (
+    <>
+      <a href="#main" className="skip-link">Skip to main content</a>
+      <AppHeader onOpenContact={() => setContactOpen(true)} />
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6">
+        <Outlet />
+      </main>
+      <WelcomeGreeter />
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+    </>
+  );
+}
+
+function WelcomeGreeter() {
+  const { t, lang } = usePrefs();
+  useEffect(() => {
+    if (!isSpeechSynthesisSupported()) return;
+    if (typeof window === "undefined") return;
+    if (window.sessionStorage.getItem("sv_greeted") === "1") return;
+    // Speak after user interaction policy: schedule when document gets first user gesture.
+    const greet = () => {
+      window.sessionStorage.setItem("sv_greeted", "1");
+      speak(t("welcomeGreeting"), { lang });
+      window.removeEventListener("pointerdown", greet);
+      window.removeEventListener("keydown", greet);
+    };
+    window.addEventListener("pointerdown", greet, { once: true });
+    window.addEventListener("keydown", greet, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", greet);
+      window.removeEventListener("keydown", greet);
+    };
+  }, [t, lang]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AuthProvider>
+        <PrefsProvider>
+          <AppChrome />
+        </PrefsProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
