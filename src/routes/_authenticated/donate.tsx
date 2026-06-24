@@ -154,12 +154,22 @@ function DonatePage() {
       });
       if (insErr) throw insErr;
 
-      setMsg(t("saved"));
+      const submittedTitle = title.trim() || t("untitled");
+      const submittedDuration = elapsed;
+      setConfirmation({
+        title: submittedTitle,
+        durationSeconds: submittedDuration,
+        keywords,
+        mime,
+        submittedAt: new Date(),
+      });
+      setMsg(null);
       setRecordedBlob(null);
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
       setTitle(""); setDescription(""); setKeywordsStr(""); setElapsed(0);
       qc.invalidateQueries({ queryKey: ["donations"] });
-      setTimeout(() => setMsg(null), 4000);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+
     } catch (e) {
       setError((e as Error).message);
     } finally {
