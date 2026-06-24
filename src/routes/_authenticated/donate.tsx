@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -47,6 +47,14 @@ function DonatePage() {
   const [msg, setMsg] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [elapsed, setElapsed] = React.useState(0);
+  const [confirmation, setConfirmation] = React.useState<{
+    title: string;
+    durationSeconds: number;
+    keywords: string[];
+    mime: string;
+    submittedAt: Date;
+  } | null>(null);
+
 
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const chunksRef = React.useRef<Blob[]>([]);
