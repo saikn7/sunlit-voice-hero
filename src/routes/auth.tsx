@@ -200,10 +200,13 @@ function AuthPage() {
   );
 }
 
-function Notice({ msg }: { msg: { kind: "error" | "ok"; text: string } }) {
+function Notice({ msg }: { msg: { kind: "error" | "ok" | "warn"; text: string } }) {
+  const cls =
+    msg.kind === "error" ? "bg-destructive/15 text-destructive"
+    : msg.kind === "warn" ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300"
+    : "bg-primary/10 text-foreground";
   return (
-    <p role={msg.kind === "error" ? "alert" : "status"}
-       className={`rounded-md px-3 py-2 text-sm ${msg.kind === "error" ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-foreground"}`}>
+    <p role={msg.kind === "error" ? "alert" : "status"} className={`rounded-md px-3 py-2 text-sm ${cls}`}>
       {msg.text}
     </p>
   );
