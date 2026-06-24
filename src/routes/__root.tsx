@@ -118,7 +118,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function AppChrome() {
-  const [contactOpen, setContactOpen] = useState(false);
   const router = useRouter();
 
   // Auth-state-driven cache invalidation (single root subscriber).
@@ -134,12 +133,11 @@ function AppChrome() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
-      <AppHeader onOpenContact={() => setContactOpen(true)} />
+      <AppHeader />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6">
         <Outlet />
       </main>
       <WelcomeGreeter />
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </>
   );
 }
