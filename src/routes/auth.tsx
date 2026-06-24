@@ -177,7 +177,7 @@ function AuthPage() {
               </div>
             </fieldset>
             {msg && <Notice msg={msg} />}
-            <Button type="submit" disabled={busy} className="w-full">{busy ? "…" : t("createAccountBtn")}</Button>
+            <Button type="submit" disabled={busy || suCooldown > 0} className="w-full">{suLabel}</Button>
           </form>
         </TabsContent>
 
