@@ -142,15 +142,14 @@ function AppChrome() {
 }
 
 function WelcomeGreeter() {
-  const { t, lang } = usePrefs();
+  const { t, lang, demoMode } = usePrefs();
   useEffect(() => {
     if (!isSpeechSynthesisSupported()) return;
     if (typeof window === "undefined") return;
-    if (window.sessionStorage.getItem("sv_greeted") === "1") return;
-    // Speak after user interaction policy: schedule when document gets first user gesture.
+    if (!demoMode && window.sessionStorage.getItem("sv_greeted") === "1") return;
     const greet = () => {
       window.sessionStorage.setItem("sv_greeted", "1");
-      speak(t("welcomeGreeting"), { lang });
+      speak(t("welcomeGreeting"), { lang, rate: demoMode ? 1.1 : 1 });
       window.removeEventListener("pointerdown", greet);
       window.removeEventListener("keydown", greet);
     };
@@ -160,7 +159,7 @@ function WelcomeGreeter() {
       window.removeEventListener("pointerdown", greet);
       window.removeEventListener("keydown", greet);
     };
-  }, [t, lang]);
+  }, [t, lang, demoMode]);
   return null;
 }
 
