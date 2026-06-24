@@ -256,19 +256,19 @@ function DonatePage() {
 
       <header>
         <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-          Donate Voice
+          {t("donateBadge")}
         </span>
         <h1
           className="mt-4 text-balance text-5xl leading-[1.05] md:text-6xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Share your voice. Open the world for someone who can't see it.
+          {t("donateHeadline")}
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          {t("recordingTip")} Record directly in your browser or upload an audio
-          file. Add a title and a few keywords so listeners can find it by voice.
+          {t("donateSub")}
         </p>
       </header>
+
 
       <section
         aria-label="Record or upload"
@@ -278,8 +278,9 @@ function DonatePage() {
           {/* Record */}
           <div className="grid place-items-center gap-4 rounded-2xl bg-secondary/40 p-6 text-center">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Record in browser
+              {t("recordInBrowser")}
             </p>
+
             {!recording ? (
               <button
                 type="button"
@@ -307,7 +308,7 @@ function DonatePage() {
           {/* Upload */}
           <div className="grid place-items-center gap-4 rounded-2xl border-2 border-dashed border-border p-6 text-center">
             <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Or upload a file
+              {t("orUploadFile")}
             </p>
             <label className="cursor-pointer rounded-2xl bg-primary px-6 py-3 text-base font-bold text-primary-foreground shadow-elevated hover:opacity-95">
               📁 {t("upload")}
@@ -319,22 +320,24 @@ function DonatePage() {
               />
             </label>
             <p className="text-sm text-muted-foreground">
-              MP3, M4A, WAV, WebM, OGG — up to a few minutes.
+              {t("fileTypes")}
             </p>
           </div>
+
         </div>
 
         {previewUrl && (
           <div className="mt-6 rounded-2xl bg-background p-4">
-            <p className="mb-2 text-sm font-semibold text-muted-foreground">Preview</p>
+            <p className="mb-2 text-sm font-semibold text-muted-foreground">{t("preview")}</p>
             <audio
               src={previewUrl}
               controls
               className="w-full"
-              aria-label="Preview recording"
+              aria-label={t("preview")}
             />
           </div>
         )}
+
       </section>
 
       <form
@@ -345,7 +348,7 @@ function DonatePage() {
           className="text-2xl md:text-3xl"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          About this recording
+          {t("aboutRecording")}
         </h2>
 
         <label className="grid gap-1.5">
@@ -356,7 +359,7 @@ function DonatePage() {
             maxLength={120}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Morning motivation — short story"
+            placeholder={t("titlePlaceholder")}
             className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
         </label>
@@ -368,7 +371,7 @@ function DonatePage() {
             onChange={(e) => setDescription(e.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="What is this recording about?"
+            placeholder={t("descPlaceholder")}
             className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
         </label>
@@ -380,13 +383,14 @@ function DonatePage() {
             value={keywordsStr}
             onChange={(e) => setKeywordsStr(e.target.value)}
             maxLength={200}
-            placeholder="motivation, story, english"
+            placeholder={t("keywordsPlaceholder")}
             className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
           <span className="text-sm text-muted-foreground">
-            Separate with commas. Listeners can find your recording by voice using these.
+            {t("keywordsHelp")}
           </span>
         </label>
+
 
         {error && (
           <p
@@ -415,9 +419,10 @@ function DonatePage() {
         </button>
         {!recordedBlob && (
           <p className="text-center text-sm text-muted-foreground">
-            Record or upload audio above to enable submit.
+            {t("enableSubmitHint")}
           </p>
         )}
+
       </form>
 
       <YourDonations />
