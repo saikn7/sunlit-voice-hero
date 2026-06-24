@@ -36,10 +36,11 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
 
         <nav aria-label="Primary" className="ml-2 flex flex-wrap items-center gap-1">
           {navItem("/", t("home"))}
-          {user && navItem("/listen", "Browse")}
+          {navItem("/browse", "Browse")}
           {user && navItem("/donate", "Donate Voice")}
           {navItem("/contact", t("contact"))}
         </nav>
+
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm">
