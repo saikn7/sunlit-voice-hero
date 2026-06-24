@@ -66,9 +66,9 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
               {t("signOut")}
             </button>
           ) : (
-            <a href="/auth" className="rounded-md bg-primary px-3 py-2 text-base font-semibold text-primary-foreground">
+            <Link to="/auth" className="rounded-md bg-primary px-3 py-2 text-base font-semibold text-primary-foreground">
               {t("signIn")}
-            </a>
+            </Link>
           )}
         </nav>
       </div>
