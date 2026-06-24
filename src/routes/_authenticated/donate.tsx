@@ -182,7 +182,7 @@ function DonatePage() {
     const secs = confirmation.durationSeconds % 60;
     const durationLabel = confirmation.durationSeconds > 0
       ? `${mins > 0 ? `${mins}m ` : ""}${secs}s`
-      : "Uploaded file";
+      : t("uploadedFile");
     return (
       <div className="grid gap-10">
         <section
@@ -190,54 +190,37 @@ function DonatePage() {
           className="rounded-3xl border border-border bg-card p-8 shadow-elevated md:p-12"
         >
           <div className="flex flex-col items-center text-center">
-            <span
-              aria-hidden
-              className="grid h-20 w-20 place-items-center rounded-full bg-primary text-4xl text-primary-foreground shadow-elevated"
-            >
-              ✓
-            </span>
+            <span aria-hidden className="grid h-20 w-20 place-items-center rounded-full bg-primary text-4xl text-primary-foreground shadow-elevated">✓</span>
             <span className="mt-6 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
-              Recording uploaded
+              {t("recordingUploaded")}
             </span>
-            <h1
-              id="confirm-heading"
-              className="mt-4 text-balance text-4xl leading-tight md:text-5xl"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Thank you for donating your voice.
+            <h1 id="confirm-heading" className="mt-4 text-balance text-4xl leading-tight md:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
+              {t("thanksDonating")}
             </h1>
-            <p className="mt-3 max-w-xl text-lg text-muted-foreground">
-              Your recording is saved and will appear in the audio library so
-              listeners can find it by voice.
-            </p>
+            <p className="mt-3 max-w-xl text-lg text-muted-foreground">{t("savedExplain")}</p>
           </div>
 
           <dl className="mt-8 grid gap-4 rounded-2xl bg-secondary/40 p-5 sm:grid-cols-3">
             <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Title</dt>
+              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("title")}</dt>
               <dd className="mt-1 truncate text-base font-semibold">{confirmation.title}</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Length</dt>
+              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("length")}</dt>
               <dd className="mt-1 text-base font-semibold">{durationLabel}</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Submitted</dt>
+              <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("submitted")}</dt>
               <dd className="mt-1 text-base font-semibold">
                 {confirmation.submittedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </dd>
             </div>
             {confirmation.keywords.length > 0 && (
               <div className="sm:col-span-3">
-                <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Keywords</dt>
+                <dt className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("keywordsLabel")}</dt>
                 <dd className="mt-1.5 flex flex-wrap gap-1.5">
                   {confirmation.keywords.map((k) => (
-                    <span
-                      key={k}
-                      className="rounded-full bg-card px-2.5 py-0.5 text-xs font-semibold"
-                    >
-                      #{k}
-                    </span>
+                    <span key={k} className="rounded-full bg-card px-2.5 py-0.5 text-xs font-semibold">#{k}</span>
                   ))}
                 </dd>
               </div>
@@ -245,41 +228,20 @@ function DonatePage() {
           </dl>
 
           <div className="mt-8">
-            <h2
-              className="text-xl"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              What happens next
-            </h2>
+            <h2 className="text-xl" style={{ fontFamily: "var(--font-display)" }}>{t("whatNext")}</h2>
             <ol className="mt-3 grid gap-2 text-base text-muted-foreground">
-              <li>
-                <span className="font-semibold text-foreground">1.</span> Your
-                recording is published to the audio library right away.
-              </li>
-              <li>
-                <span className="font-semibold text-foreground">2.</span> Listeners
-                can find it by voice using your keywords.
-              </li>
-              <li>
-                <span className="font-semibold text-foreground">3.</span> You can
-                edit or remove it any time from "Your donations" below.
-              </li>
+              <li><span className="font-semibold text-foreground">1.</span> {t("next1")}</li>
+              <li><span className="font-semibold text-foreground">2.</span> {t("next2")}</li>
+              <li><span className="font-semibold text-foreground">3.</span> {t("next3")}</li>
             </ol>
           </div>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setConfirmation(null)}
-              className="rounded-2xl bg-primary px-6 py-3.5 text-lg font-bold text-primary-foreground shadow-elevated hover:opacity-95"
-            >
-              ♥ Donate another
+            <button type="button" onClick={() => setConfirmation(null)} className="rounded-2xl bg-primary px-6 py-3.5 text-lg font-bold text-primary-foreground shadow-elevated hover:opacity-95">
+              {t("donateAnother")}
             </button>
-            <Link
-              to="/browse"
-              className="rounded-2xl border border-border bg-card px-6 py-3.5 text-lg font-bold text-foreground hover:bg-secondary"
-            >
-              ▶ Browse the library
+            <Link to="/browse" className="rounded-2xl border border-border bg-card px-6 py-3.5 text-lg font-bold text-foreground hover:bg-secondary">
+              {t("browseLibrary")}
             </Link>
           </div>
         </section>
