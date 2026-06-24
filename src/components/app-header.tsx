@@ -25,22 +25,16 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
     <header className="border-b border-border bg-card/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
         <Link to="/" className="flex items-center gap-2.5 text-xl font-bold">
-          <span
-            aria-hidden
-            className="grid h-9 w-9 place-items-center rounded-full bg-primary text-lg text-primary-foreground"
-          >
-            🎤
-          </span>
+          <span aria-hidden className="grid h-9 w-9 place-items-center rounded-full bg-primary text-lg text-primary-foreground">🎤</span>
           <span style={{ fontFamily: "var(--font-display)" }}>{t("appName")}</span>
         </Link>
 
         <nav aria-label="Primary" className="ml-2 flex flex-wrap items-center gap-1">
           {navItem("/", t("home"))}
-          {navItem("/browse", "Browse")}
-          {navItem("/donate", "Donate Voice")}
+          {navItem("/browse", t("browse"))}
+          {navItem("/donate", t("donateMode"))}
           {navItem("/contact", t("contact"))}
         </nav>
-
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm">
@@ -64,10 +58,8 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
             className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span aria-hidden>{theme === "dark" ? "☀️" : "🌙"}</span>
-            {theme === "dark" ? "Light" : "Dark"}
+            {theme === "dark" ? t("light") : t("dark")}
           </button>
-
-
 
           {user ? (
             <button
@@ -82,7 +74,7 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
               to="/auth"
               className="rounded-xl bg-primary px-4 py-2 text-base font-bold text-primary-foreground hover:opacity-95"
             >
-              Sign in
+              {t("signIn")}
             </Link>
           )}
         </div>
