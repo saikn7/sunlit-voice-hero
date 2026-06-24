@@ -160,45 +160,101 @@ function DonatePage() {
   }
 
   return (
-    <div className="grid gap-8">
-      <h1 className="text-3xl font-bold">{t("donateMode")}</h1>
-      <p className="text-base text-muted-foreground">{t("recordingTip")}</p>
+    <div className="grid gap-10">
+      <header>
+        <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+          Donate Voice
+        </span>
+        <h1
+          className="mt-4 text-balance text-5xl leading-[1.05] md:text-6xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Share your voice. Open the world for someone who can't see it.
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+          {t("recordingTip")} Record directly in your browser or upload an audio
+          file. Add a title and a few keywords so listeners can find it by voice.
+        </p>
+      </header>
 
-      <section className="grid gap-4 rounded-2xl border border-border bg-card p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          {!recording ? (
-            <button
-              type="button"
-              onClick={startRecording}
-              className="rounded-full bg-primary px-6 py-3 text-lg font-bold text-primary-foreground"
-            >
-              🎙️ {t("record")}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="relative rounded-full bg-destructive px-6 py-3 text-lg font-bold text-destructive-foreground pulse-ring"
-            >
-              ⏹ {t("stop")} ({elapsed}s)
-            </button>
-          )}
-          <label className="cursor-pointer rounded-lg border border-border bg-secondary px-4 py-3 text-base font-semibold">
-            📁 {t("upload")}
-            <input
-              type="file"
-              accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg"
-              onChange={onUpload}
-              className="sr-only"
-            />
-          </label>
+      <section
+        aria-label="Record or upload"
+        className="rounded-3xl border border-border bg-card p-6 shadow-elevated md:p-8"
+      >
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr]">
+          {/* Record */}
+          <div className="grid place-items-center gap-4 rounded-2xl bg-secondary/40 p-6 text-center">
+            <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Record in browser
+            </p>
+            {!recording ? (
+              <button
+                type="button"
+                onClick={startRecording}
+                className="grid h-24 w-24 place-items-center rounded-full bg-primary text-4xl text-primary-foreground shadow-elevated transition hover:scale-105"
+                aria-label={t("record")}
+              >
+                🎙️
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="pulse-ring relative grid h-24 w-24 place-items-center rounded-full bg-destructive text-3xl text-destructive-foreground"
+                aria-label={t("stop")}
+              >
+                ⏹
+              </button>
+            )}
+            <p className="text-base font-semibold" aria-live="polite">
+              {recording ? `${t("stop")} · ${elapsed}s` : t("record")}
+            </p>
+          </div>
+
+          {/* Upload */}
+          <div className="grid place-items-center gap-4 rounded-2xl border-2 border-dashed border-border p-6 text-center">
+            <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Or upload a file
+            </p>
+            <label className="cursor-pointer rounded-2xl bg-primary px-6 py-3 text-base font-bold text-primary-foreground shadow-elevated hover:opacity-95">
+              📁 {t("upload")}
+              <input
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg"
+                onChange={onUpload}
+                className="sr-only"
+              />
+            </label>
+            <p className="text-sm text-muted-foreground">
+              MP3, M4A, WAV, WebM, OGG — up to a few minutes.
+            </p>
+          </div>
         </div>
+
         {previewUrl && (
-          <audio src={previewUrl} controls className="w-full" aria-label="Preview recording" />
+          <div className="mt-6 rounded-2xl bg-background p-4">
+            <p className="mb-2 text-sm font-semibold text-muted-foreground">Preview</p>
+            <audio
+              src={previewUrl}
+              controls
+              className="w-full"
+              aria-label="Preview recording"
+            />
+          </div>
         )}
       </section>
 
-      <form onSubmit={submit} className="grid gap-4">
+      <form
+        onSubmit={submit}
+        className="grid gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
+      >
+        <h2
+          className="text-2xl md:text-3xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          About this recording
+        </h2>
+
         <label className="grid gap-1.5">
           <span className="text-base font-semibold">{t("title")}</span>
           <input
@@ -207,9 +263,11 @@ function DonatePage() {
             maxLength={120}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
+            placeholder="e.g. Morning motivation — short story"
+            className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
         </label>
+
         <label className="grid gap-1.5">
           <span className="text-base font-semibold">{t("description")}</span>
           <textarea
@@ -217,9 +275,11 @@ function DonatePage() {
             onChange={(e) => setDescription(e.target.value)}
             maxLength={500}
             rows={3}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
+            placeholder="What is this recording about?"
+            className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
         </label>
+
         <label className="grid gap-1.5">
           <span className="text-base font-semibold">{t("keywords")}</span>
           <input
@@ -227,26 +287,51 @@ function DonatePage() {
             value={keywordsStr}
             onChange={(e) => setKeywordsStr(e.target.value)}
             maxLength={200}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
+            placeholder="motivation, story, english"
+            className="rounded-2xl border border-border bg-input px-4 py-3 text-lg"
           />
+          <span className="text-sm text-muted-foreground">
+            Separate with commas. Listeners can find your recording by voice using these.
+          </span>
         </label>
 
-        {error && <p role="alert" className="rounded-md bg-destructive/15 px-3 py-2 text-destructive">{error}</p>}
-        {msg && <p role="status" className="rounded-md bg-primary/15 px-3 py-2 text-primary">{msg}</p>}
+        {error && (
+          <p
+            role="alert"
+            className="rounded-2xl bg-destructive/15 px-4 py-3 text-destructive"
+          >
+            {error}
+          </p>
+        )}
+        {msg && (
+          <p
+            role="status"
+            className="rounded-2xl bg-primary/15 px-4 py-3 text-primary"
+          >
+            {msg}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={busy || !recordedBlob}
-          className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-primary-foreground disabled:opacity-60"
+          className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-lg font-bold text-primary-foreground shadow-elevated transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
+          <span aria-hidden>♥</span>
           {busy ? t("loading") : t("submit")}
         </button>
+        {!recordedBlob && (
+          <p className="text-center text-sm text-muted-foreground">
+            Record or upload audio above to enable submit.
+          </p>
+        )}
       </form>
 
       <YourDonations />
     </div>
   );
 }
+
 
 function YourDonations() {
   const { t } = usePrefs();
