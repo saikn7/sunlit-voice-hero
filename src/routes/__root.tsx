@@ -7,14 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { AuthProvider } from "@/lib/auth-context";
 import { PrefsProvider, usePrefs } from "@/lib/prefs-context";
 import { AppHeader } from "@/components/app-header";
-import { ContactModal } from "@/components/contact-modal";
 import { speak, isSpeechSynthesisSupported } from "@/lib/speech";
 import { supabase } from "@/integrations/supabase/client";
 
