@@ -138,6 +138,7 @@ function AppChrome() {
         <Outlet />
       </main>
       <WelcomeGreeter />
+      <VoiceNav />
     </>
   );
 }
