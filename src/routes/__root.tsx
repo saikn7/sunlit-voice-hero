@@ -7,14 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { AuthProvider } from "@/lib/auth-context";
 import { PrefsProvider, usePrefs } from "@/lib/prefs-context";
 import { AppHeader } from "@/components/app-header";
-import { ContactModal } from "@/components/contact-modal";
 import { speak, isSpeechSynthesisSupported } from "@/lib/speech";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -118,7 +117,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function AppChrome() {
-  const [contactOpen, setContactOpen] = useState(false);
   const router = useRouter();
 
   // Auth-state-driven cache invalidation (single root subscriber).
@@ -134,12 +132,11 @@ function AppChrome() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
-      <AppHeader onOpenContact={() => setContactOpen(true)} />
+      <AppHeader />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6">
         <Outlet />
       </main>
       <WelcomeGreeter />
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </>
   );
 }
