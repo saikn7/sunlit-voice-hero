@@ -24,7 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const { signIn, signUp, resetPassword, user, loading } = useAuth();
-  const { t } = usePrefs();
+  const { t, lang } = usePrefs();
   const { redirect: redirectTo } = useSearch({ from: "/auth" });
   const navigate = useNavigate();
 
