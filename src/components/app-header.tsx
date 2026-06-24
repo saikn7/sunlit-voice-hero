@@ -84,16 +84,17 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
             </select>
           </label>
 
-          <PillToggle
-            label="A11y"
-            on={theme === "dark"}
+          <button
+            type="button"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          />
-          <PillToggle
-            label="Contrast"
-            on={contrast}
-            onClick={() => setContrast(!contrast)}
-          />
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span aria-hidden>{theme === "dark" ? "☀️" : "🌙"}</span>
+            {theme === "dark" ? "Light" : "Dark"}
+          </button>
+
+
 
           {user ? (
             <button
