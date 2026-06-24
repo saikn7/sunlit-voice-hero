@@ -2,12 +2,12 @@ export type Lang = "en" | "my";
 
 const dict = {
   en: {
-    appName: "Sunlit Voice",
-    tagline: "A voice-first companion for everyone.",
-    welcomeGreeting: "Welcome to Sunlit Voice. Press the big button to start listening, or donate your voice to help others.",
-    startListening: "Start Listening",
-    stopListening: "Stop Listening",
-    donateYourVoice: "Donate Your Voice",
+    appName: "VoiceBridge",
+    tagline: "Accessibility-first audio platform.",
+    welcomeGreeting: "Welcome to VoiceBridge. You can say Help, Open Profile, Find Audio, or Donate Voice.",
+    startListening: "Start listening",
+    stopListening: "Stop listening",
+    donateYourVoice: "Donate your voice",
     listeningMode: "Listening Mode",
     donateMode: "Donate Voice",
     contactUs: "Contact Us",
