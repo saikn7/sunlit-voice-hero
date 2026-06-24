@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import { usePrefs } from "@/lib/prefs-context";
 import { useAuth } from "@/lib/auth-context";
 import { LANGS, type Lang } from "@/lib/i18n";
@@ -10,23 +10,24 @@ export function AppHeader({ onOpenContact }: { onOpenContact: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const navItem = (to: string, label: string) => (
-    <Link
-      to={to}
+    <a
+      href={to}
       className={`rounded-md px-3 py-2 text-base font-semibold focus-visible:outline-none ${
         path === to ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
       }`}
+      aria-current={path === to ? "page" : undefined}
     >
       {label}
-    </Link>
+    </a>
   );
 
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary">
+        <a href="/" className="flex items-center gap-2 text-xl font-bold text-primary">
           <span aria-hidden className="inline-block h-7 w-7 rounded-full bg-primary" />
           {t("appName")}
-        </Link>
+        </a>
         <nav aria-label="Primary" className="ml-auto flex flex-wrap items-center gap-1">
           {navItem("/", t("home"))}
           {user && navItem("/listen", t("listen"))}
@@ -71,9 +72,9 @@ export function AppHeader({ onOpenContact }: { onOpenContact: () => void }) {
               {t("signOut")}
             </button>
           ) : (
-            <Link to="/auth" className="rounded-md bg-primary px-3 py-2 text-base font-semibold text-primary-foreground">
+            <a href="/auth" className="rounded-md bg-primary px-3 py-2 text-base font-semibold text-primary-foreground">
               {t("signIn")}
-            </Link>
+            </a>
           )}
         </nav>
       </div>
