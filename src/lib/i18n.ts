@@ -2,9 +2,9 @@ export type Lang = "en" | "my";
 
 const dict = {
   en: {
-    appName: "VoiceBridge",
+    appName: "SunlitVoice",
     tagline: "Accessibility-first audio platform.",
-    welcomeGreeting: "Welcome to VoiceBridge. You can say Help, Open Profile, Find Audio, or Donate Voice.",
+    welcomeGreeting: "Welcome to SunlitVoice. You can say Help, Open Profile, Find Audio, or Donate Voice.",
     startListening: "Start listening",
     stopListening: "Stop listening",
     donateYourVoice: "Donate your voice",
@@ -62,9 +62,9 @@ const dict = {
     untitled: "Untitled donation",
   },
   my: {
-    appName: "VoiceBridge",
+    appName: "SunlitVoice",
     tagline: "လူတိုင်းအတွက် အသံဦးစားပေး လက်တွဲဖော်။",
-    welcomeGreeting: "VoiceBridge သို့ ကြိုဆိုပါတယ်။ Help, Open Profile, Find Audio, သို့မဟုတ် Donate Voice ဟု ပြောနိုင်ပါသည်။",
+    welcomeGreeting: "SunlitVoice သို့ ကြိုဆိုပါတယ်။ Help, Open Profile, Find Audio, သို့မဟုတ် Donate Voice ဟု ပြောနိုင်ပါသည်။",
     startListening: "နားထောင်ရန် စတင်ပါ",
     stopListening: "နားထောင်ခြင်း ရပ်ပါ",
     donateYourVoice: "သင့်အသံကို လှူဒါန်းပါ",
