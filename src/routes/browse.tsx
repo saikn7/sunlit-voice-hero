@@ -7,6 +7,7 @@ import { usePrefs } from "@/lib/prefs-context";
 import { fuzzySearch } from "@/lib/fuzzy";
 import { cancelSpeech } from "@/lib/speech";
 import type { Tables } from "@/integrations/supabase/types";
+import type { TKey } from "@/lib/i18n";
 
 type Donation = Tables<"donations">;
 
@@ -22,14 +23,14 @@ export const Route = createFileRoute("/browse")({
   }),
 });
 
-const CATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "motivation", label: "Motivation" },
-  { id: "education", label: "Education" },
-  { id: "stories", label: "Stories" },
-  { id: "news", label: "News" },
-  { id: "prayers", label: "Prayers" },
-] as const;
+const CATEGORIES: { id: string; key: TKey }[] = [
+  { id: "all", key: "catAll" },
+  { id: "motivation", key: "catMotivation" },
+  { id: "education", key: "catEducation" },
+  { id: "stories", key: "catStories" },
+  { id: "news", key: "catNews" },
+  { id: "prayers", key: "catPrayers" },
+];
 
 function BrowsePage() {
   const { user } = useAuth();
@@ -88,22 +89,14 @@ function BrowsePage() {
   return (
     <div className="grid gap-8">
       <header>
-        <h1
-          className="text-5xl md:text-6xl"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Audio library
+        <h1 className="text-5xl md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
+          {t("audioLibrary")}
         </h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          Browse donated recordings. Use voice — say "Find motivation".
-        </p>
+        <p className="mt-3 text-lg text-muted-foreground">{t("browseSub")}</p>
       </header>
 
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setQuery(input);
-        }}
+        onSubmit={(e) => { e.preventDefault(); setQuery(input); }}
         className="flex flex-wrap gap-3"
         role="search"
       >
@@ -111,15 +104,12 @@ function BrowsePage() {
           type="search"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Search by title…"
-          aria-label="Search audio by title"
+          placeholder={t("searchByTitle")}
+          aria-label={t("searchByTitle")}
           className="min-w-0 flex-1 rounded-2xl border border-border bg-card px-5 py-3 text-lg shadow-sm"
         />
-        <button
-          type="submit"
-          className="rounded-2xl bg-primary px-6 py-3 text-lg font-bold text-primary-foreground shadow-elevated hover:opacity-95"
-        >
-          Search
+        <button type="submit" className="rounded-2xl bg-primary px-6 py-3 text-lg font-bold text-primary-foreground shadow-elevated hover:opacity-95">
+          {t("searchBtn")}
         </button>
       </form>
 
@@ -134,12 +124,10 @@ function BrowsePage() {
               aria-selected={on}
               onClick={() => setCategory(c.id)}
               className={`rounded-full border px-5 py-2 text-base font-semibold transition ${
-                on
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-foreground hover:bg-secondary"
+                on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
-              {c.label}
+              {t(c.key)}
             </button>
           );
         })}
@@ -147,27 +135,17 @@ function BrowsePage() {
 
       {!user && (
         <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-          <p className="text-xl font-semibold">Sign in to listen to donated recordings.</p>
-          <p className="mt-2 text-muted-foreground">
-            The audio library is available to signed-in listeners to protect contributors.
-          </p>
-          <Link
-            to="/auth"
-            className="mt-6 inline-block rounded-2xl bg-primary px-6 py-3 text-lg font-bold text-primary-foreground shadow-elevated"
-          >
-            Sign in to browse
+          <p className="text-xl font-semibold">{t("signInToListen")}</p>
+          <p className="mt-2 text-muted-foreground">{t("signInExplain")}</p>
+          <Link to="/auth" className="mt-6 inline-block rounded-2xl bg-primary px-6 py-3 text-lg font-bold text-primary-foreground shadow-elevated">
+            {t("signInToBrowse")}
           </Link>
         </div>
       )}
 
       {user && (
         <>
-          <audio
-            ref={audioRef}
-            controls
-            className="w-full"
-            onEnded={() => setPlayingId(null)}
-          />
+          <audio ref={audioRef} controls className="w-full" onEnded={() => setPlayingId(null)} />
 
           {isLoading && <p className="text-muted-foreground">{t("loading")}</p>}
 
@@ -175,9 +153,9 @@ function BrowsePage() {
             <div className="rounded-3xl border border-dashed border-border bg-card/60 p-10 text-center">
               <p className="text-lg font-semibold">{t("noResults")}</p>
               <p className="mt-2 text-muted-foreground">
-                Try another search or be the first to{" "}
+                {t("tryAnotherOr")}{" "}
                 <Link to="/donate" className="text-primary underline">
-                  donate your voice
+                  {t("donateYourVoice")}
                 </Link>
                 .
               </p>
@@ -186,28 +164,15 @@ function BrowsePage() {
 
           <ul className="grid gap-4 md:grid-cols-2">
             {filtered.map((d) => (
-              <li
-                key={d.id}
-                className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elevated"
-              >
+              <li key={d.id} className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elevated">
                 <div className="flex items-start gap-3">
-                  <span
-                    aria-hidden
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xl text-primary"
-                  >
-                    🎤
-                  </span>
+                  <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xl text-primary">🎤</span>
                   <div className="min-w-0 flex-1">
-                    <h3
-                      className="truncate text-xl"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
+                    <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
                       {d.title || t("untitled")}
                     </h3>
                     {d.description && (
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {d.description}
-                      </p>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
                     )}
                   </div>
                 </div>
@@ -215,10 +180,7 @@ function BrowsePage() {
                 {d.keywords && d.keywords.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {d.keywords.slice(0, 4).map((k) => (
-                      <span
-                        key={k}
-                        className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground"
-                      >
+                      <span key={k} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
                         #{k}
                       </span>
                     ))}
@@ -229,9 +191,7 @@ function BrowsePage() {
                   type="button"
                   onClick={() => playDonation(d)}
                   className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition ${
-                    playingId === d.id
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-primary text-primary-foreground hover:opacity-95"
+                    playingId === d.id ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground hover:opacity-95"
                   }`}
                 >
                   <span aria-hidden>{playingId === d.id ? "❚❚" : "▶"}</span>

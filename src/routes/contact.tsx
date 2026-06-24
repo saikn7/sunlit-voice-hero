@@ -10,17 +10,17 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact Us — SunlitVoice" },
-      { name: "description", content: "Get in touch with the SunlitVoice team. We reply within 1–2 business days." },
+      { name: "description", content: "Get in touch with the SunlitVoice team." },
       { property: "og:title", content: "Contact Us — SunlitVoice" },
-      { property: "og:description", content: "Get in touch with the SunlitVoice team. We reply within 1–2 business days." },
+      { property: "og:description", content: "Get in touch with the SunlitVoice team." },
     ],
   }),
 });
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Enter a valid email").max(255),
-  message: z.string().trim().min(5, "Message is too short").max(2000),
+  name: z.string().trim().min(1).max(100),
+  email: z.string().trim().email().max(255),
+  message: z.string().trim().min(5).max(2000),
 });
 
 function ContactPage() {
@@ -43,7 +43,7 @@ function ContactPage() {
     setErr(null);
     const parsed = schema.safeParse({ name, email, message });
     if (!parsed.success) {
-      setErr(parsed.error.issues[0]?.message ?? "Invalid input");
+      setErr(parsed.error.issues[0]?.message ?? t("error"));
       return;
     }
     setBusy(true);
@@ -72,58 +72,30 @@ function ContactPage() {
 
       <form onSubmit={submit} className="grid gap-4" aria-describedby={err ? "contact-error" : undefined}>
         <label className="grid gap-1.5">
-          <span className="text-base font-semibold">Name</span>
-          <input
-            type="text"
-            required
-            maxLength={100}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
-            autoComplete="name"
-          />
+          <span className="text-base font-semibold">{t("name")}</span>
+          <input type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)}
+            className="rounded-lg border border-border bg-input px-4 py-3 text-lg" autoComplete="name" />
         </label>
         <label className="grid gap-1.5">
           <span className="text-base font-semibold">{t("email")}</span>
-          <input
-            type="email"
-            required
-            maxLength={255}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
-            autoComplete="email"
-          />
+          <input type="email" required maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)}
+            className="rounded-lg border border-border bg-input px-4 py-3 text-lg" autoComplete="email" />
         </label>
         <label className="grid gap-1.5">
-          <span className="text-base font-semibold">Message</span>
-          <textarea
-            required
-            maxLength={2000}
-            rows={6}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="rounded-lg border border-border bg-input px-4 py-3 text-lg"
-          />
+          <span className="text-base font-semibold">{t("message")}</span>
+          <textarea required maxLength={2000} rows={6} value={message} onChange={(e) => setMessage(e.target.value)}
+            className="rounded-lg border border-border bg-input px-4 py-3 text-lg" />
         </label>
 
         {err && (
-          <p id="contact-error" role="alert" className="rounded-md bg-destructive/15 px-3 py-2 text-destructive">
-            {err}
-          </p>
+          <p id="contact-error" role="alert" className="rounded-md bg-destructive/15 px-3 py-2 text-destructive">{err}</p>
         )}
         {ok && (
-          <p role="status" className="rounded-md bg-primary/15 px-3 py-2 text-primary">
-            Message sent successfully. We'll be in touch soon.
-          </p>
+          <p role="status" className="rounded-md bg-primary/15 px-3 py-2 text-primary">{t("messageSent")}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-primary-foreground disabled:opacity-60"
-        >
-          {busy ? t("loading") : "Send Message"}
+        <button type="submit" disabled={busy} className="rounded-lg bg-primary px-6 py-3 text-lg font-bold text-primary-foreground disabled:opacity-60">
+          {busy ? t("loading") : t("sendMessage")}
         </button>
       </form>
     </div>
