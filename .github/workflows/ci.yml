@@ -23,3 +23,6 @@ jobs:
 
       - name: Build (development)
         run: bun run build:dev
+
+      - name: Build (production)
+        run: bun run build
