@@ -76,15 +76,24 @@ function BrowsePage() {
     return data.signedUrl;
   }, [signedUrls]);
 
-  const playDonation = React.useCallback(async (d: Donation) => {
+  const togglePlay = React.useCallback(async (d: Donation) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    // Same track: toggle pause/play
+    if (playingId === d.id) {
+      if (audio.paused) audio.play().catch(() => {});
+      else audio.pause();
+      return;
+    }
     const url = await resolveUrl(d);
-    if (!url || !audioRef.current) return;
+    if (!url) return;
     cancelSpeech();
-    audioRef.current.pause();
-    audioRef.current.src = url;
-    audioRef.current.play().catch(() => {});
+    audio.pause();
+    audio.src = url;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
     setPlayingId(d.id);
-  }, [resolveUrl]);
+  }, [resolveUrl, playingId]);
 
   return (
     <div className="grid gap-6 sm:gap-8">
