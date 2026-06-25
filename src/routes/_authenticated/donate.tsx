@@ -87,7 +87,9 @@ function DonatePage() {
       });
       streamRef.current = stream;
       const { mime } = pickMimeType();
-      const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      const mr = mime
+        ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 128000 })
+        : new MediaRecorder(stream, { audioBitsPerSecond: 128000 });
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
