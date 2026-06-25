@@ -45,13 +45,17 @@ function pickVoice(lang: Lang): SpeechSynthesisVoice | null {
     v = voices.find((x) => /burmese|myanmar|မြန်မာ/i.test(x.name));
     if (v) return v;
   }
-  // 4. Prefer voice matching the browser's preferred languages
-  for (const bl of browserLangs) {
-    v = voices.find((x) => x.lang?.toLowerCase() === bl);
-    if (v) return v;
-    const bp = bl.split("-")[0];
-    v = voices.find((x) => x.lang?.toLowerCase().startsWith(bp + "-"));
-    if (v) return v;
+  // 4. Prefer voice matching the browser's preferred languages — but never
+  //    fall back to a non-Burmese voice when speaking Burmese, that would
+  //    pronounce the text with the wrong phonetics.
+  if (lang !== "my") {
+    for (const bl of browserLangs) {
+      v = voices.find((x) => x.lang?.toLowerCase() === bl);
+      if (v) return v;
+      const bp = bl.split("-")[0];
+      v = voices.find((x) => x.lang?.toLowerCase().startsWith(bp + "-"));
+      if (v) return v;
+    }
   }
   return null;
 }
