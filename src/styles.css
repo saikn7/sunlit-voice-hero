@@ -156,7 +156,7 @@
   }
   /* Headings need extra vertical room for stacking marks; override Tailwind's
      leading-* utilities used on the hero (`leading-[1.08]` etc.). */
-  :lang(my) h1, [lang="my"] h1 { line-height: 1.5 !important; letter-spacing: 0 !important; }
+  :lang(my) h1, [lang="my"] h1 { line-height: 1.6 !important; letter-spacing: 0 !important; font-weight: 600 !important; }
   :lang(my) h2, [lang="my"] h2 { line-height: 1.45 !important; letter-spacing: 0 !important; }
   :lang(my) h3, [lang="my"] h3 { line-height: 1.4 !important; letter-spacing: 0 !important; }
   /* Slightly trim very large Burmese headings so they don't dominate the hero. */
