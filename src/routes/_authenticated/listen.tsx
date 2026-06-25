@@ -233,6 +233,11 @@ function ListenPage() {
         <p className="text-base text-muted-foreground" aria-live="polite">
           {listening ? t("listeningHint") : t("assistantReady")}
         </p>
+        {listening && (
+          <p className="text-sm text-primary animate-pulse" aria-live="polite">
+            {t("keepTalking")}
+          </p>
+        )}
       </div>
 
       <label className="grid gap-2">

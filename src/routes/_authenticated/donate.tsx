@@ -313,6 +313,11 @@ function DonatePage() {
             <p className="text-base font-semibold" aria-live="polite">
               {recording ? `${t("stop")} · ${elapsed}s` : t("record")}
             </p>
+            {recording && (
+              <p className="text-sm text-primary animate-pulse">
+                {t("keepTalking")}
+              </p>
+            )}
           </div>
 
           {/* Upload */}
