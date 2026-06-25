@@ -120,27 +120,61 @@
 @layer base {
   * { border-color: var(--color-border); }
   html {
-    font-size: 18px;
+    font-size: 15.5px;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+  @media (min-width: 768px) {
+    html { font-size: 16px; }
+  }
   body, div, nav, header, main, section, article, aside, footer, button, input, select, textarea, a, span, p, h1, h2, h3, h4, h5, h6, ul, ol, li, label, table, tr, td, th, form {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
   }
   body {
-    background: var(--color-background);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--color-primary) 8%, transparent), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, color-mix(in oklab, var(--color-accent) 10%, transparent), transparent 60%),
+      var(--color-background);
     color: var(--color-foreground);
-    /* Burmese fallback ensures Myanmar Unicode renders correctly on iOS Safari
-       and any system missing a Burmese system font. */
     font-family: "Inter", "Noto Sans Myanmar", "Myanmar Text", "Padauk", "Myanmar MN", system-ui, -apple-system, sans-serif;
     min-height: 100dvh;
     word-break: break-word;
     overflow-wrap: anywhere;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   :lang(my), [lang="my"] {
     font-family: "Noto Sans Myanmar", "Myanmar Text", "Padauk", "Myanmar MN", "Inter", system-ui, sans-serif;
-    line-height: 1.7;
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+    font-feature-settings: "kern" 1, "liga" 1;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  :lang(my) h1, [lang="my"] h1,
+  :lang(my) h2, [lang="my"] h2,
+  :lang(my) h3, [lang="my"] h3 {
+    line-height: 1.35;
+    letter-spacing: 0.005em;
+  }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { font-weight: 700; }
+  h2 { font-weight: 700; }
+  h3 { font-weight: 600; }
+  p { line-height: 1.6; }
+
+  /* Soft elevation for cards site-wide */
+  .bg-card {
+    box-shadow: 0 1px 2px oklch(0 0 0 / 0.04), 0 4px 16px -8px oklch(0 0 0 / 0.08);
+  }
+  .dark .bg-card {
+    box-shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+  }
+
+  /* Button polish — subtle lift on hover */
+  button:not(:disabled):hover,
+  a.inline-flex:hover {
+    transform: translateY(-1px);
+  }
+  button:active { transform: translateY(0); }
 
   :focus-visible {
     outline: 3px solid var(--color-ring);
