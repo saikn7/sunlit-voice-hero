@@ -96,7 +96,7 @@ const dict = {
     browseSub: "Browse donated recordings. Use voice — say \"Find motivation\".",
     searchBtn: "Search",
     searchByTitle: "Search by title…",
-    catAll: "All", catMotivation: "Motivation", catEducation: "Education", catStories: "Stories", catNews: "News", catPrayers: "Prayers",
+    catAll: "All", catMotivation: "Motivation", catEducation: "Education", catStories: "Stories", catNews: "News", catEntertainment: "Entertainment", catPrayers: "Prayers", catOther: "Other",
     signInToListen: "Sign in to listen to donated recordings.",
     signInExplain: "The audio library is available to signed-in listeners to protect contributors.",
     signInToBrowse: "Sign in to browse",
