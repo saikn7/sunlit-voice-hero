@@ -159,6 +159,34 @@ function BrowsePage() {
     }
   }, [donations]);
 
+  // Always-fresh donations ref so the voice handler never reads a stale list.
+  const donationsRef = React.useRef<Donation[]>(donations);
+  React.useEffect(() => { donationsRef.current = donations; }, [donations]);
+  const filteredRef = React.useRef<Donation[]>(filtered);
+  React.useEffect(() => { filteredRef.current = filtered; }, [filtered]);
+
+  const playByMatch = React.useCallback((term: string): Donation | null => {
+    const list = donationsRef.current;
+    // Normalize but strip ONLY ASCII punctuation — preserve Burmese characters.
+    const safeTerm = term.normalize("NFC").trim().replace(/[!-/:-@[-`{-~]+/g, " ").replace(/\s+/g, " ").trim();
+    if (!safeTerm) return null;
+    // 1) Exact title match (case-insensitive, NFC).
+    const exact = list.find((d) => (d.title || "").normalize("NFC").trim().toLowerCase() === safeTerm.toLowerCase());
+    if (exact) {
+      console.log(`[voice] Matched audio (exact): ${exact.title} | id: ${exact.id}`);
+      togglePlay(exact);
+      return exact;
+    }
+    // 2) Fuzzy (title + keywords + description).
+    const results = fuzzySearch(list, safeTerm);
+    if (results[0]) {
+      console.log(`[voice] Matched audio (fuzzy): ${results[0].title} | id: ${results[0].id}`);
+      togglePlay(results[0]);
+      return results[0];
+    }
+    return null;
+  }, [togglePlay]);
+
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
     const announce = (msg: string, silent = false) => {
@@ -174,11 +202,14 @@ function BrowsePage() {
     const onVoice = (e: Event) => {
       const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
       if (!detail) return;
+      // Preserve Burmese (and all Unicode letters); strip only ASCII punctuation.
+      const rawNFC = (detail.raw || "").normalize("NFC").trim();
       const text = detail.text.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+      console.log(`[voice] Voice input: ${rawNFC}`);
       const audio = audioRef.current;
 
       // Pause / stop
-      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
+      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(rawNFC)) {
         if (audio && !audio.paused) audio.pause();
         announce("Paused", true);
         e.preventDefault();
@@ -193,15 +224,16 @@ function BrowsePage() {
       }
       // Plain "play" — toggle current or play first
       if (/^play$/i.test(text)) {
+        const first = filteredRef.current[0];
         if (audio && playingId && audio.paused) audio.play().catch(() => {});
-        else if (!playingId && filtered[0]) togglePlay(filtered[0]);
+        else if (!playingId && first) togglePlay(first);
         announce("Playing", true);
         e.preventDefault();
         return;
       }
 
       // Category by bare name or short phrase
-      const bareCat = CATEGORIES.find((c) => c.match.test(text));
+      const bareCat = CATEGORIES.find((c) => c.match.test(text) || c.match.test(rawNFC));
       if (bareCat && text.split(" ").length <= 3) {
         applyCategory(bareCat.id);
         e.preventDefault();
@@ -209,7 +241,7 @@ function BrowsePage() {
       }
 
       // "play/find/show <term>" — category shortcut or fuzzy title match
-      const m = text.match(/^(?:play|listen to|find|search|open|show|filter|category)\s+(.+)$/i);
+      const m = rawNFC.match(/^(?:play|listen to|find|search|open|show|filter|category|ဖွင့်|ရှာ)\s+(.+)$/i);
       if (m) {
         const term = m[1].trim();
         const cat = CATEGORIES.find((c) => c.id !== "all" && c.match.test(term));
@@ -218,10 +250,9 @@ function BrowsePage() {
           e.preventDefault();
           return;
         }
-        const results = fuzzySearch(donations, term);
-        if (results[0]) {
-          togglePlay(results[0]);
-          announce(`Playing ${results[0].title}`, true);
+        const hit = playByMatch(term);
+        if (hit) {
+          announce(`Playing ${hit.title}`, true);
           e.preventDefault();
           return;
         }
@@ -229,10 +260,21 @@ function BrowsePage() {
         e.preventDefault();
         return;
       }
+
+      // Burmese / bare-title fallback: try matching the whole transcript
+      // against the live audio index (Unicode-safe, no toLowerCase needed).
+      if (rawNFC.length >= 2) {
+        const hit = playByMatch(rawNFC);
+        if (hit) {
+          announce(`Playing ${hit.title}`, true);
+          e.preventDefault();
+          return;
+        }
+      }
     };
     window.addEventListener("sv-voice", onVoice as EventListener);
     return () => window.removeEventListener("sv-voice", onVoice as EventListener);
-  }, [donations, filtered, playingId, togglePlay]);
+  }, [playingId, togglePlay, playByMatch]);
 
   return (
     <div className="grid gap-6 sm:gap-8">
