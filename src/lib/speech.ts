@@ -206,6 +206,16 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
   let aborted = false;
   let stopped = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let vadRafId: number | null = null;
+  let audioCtx: AudioContext | null = null;
+  const SILENCE_MS = 1800;       // stop after this long without voice
+  const MIN_SPEECH_MS = 400;     // need this much voice before silence counts
+  const RMS_THRESHOLD = 0.012;   // ~mic noise floor for "voice"
+
+  const stopVad = () => {
+    if (vadRafId !== null) { cancelAnimationFrame(vadRafId); vadRafId = null; }
+    if (audioCtx) { try { audioCtx.close(); } catch {} audioCtx = null; }
+  };
 
   const rec: GeminiRecognizer = {
     lang: LANG_TAG[lang],
