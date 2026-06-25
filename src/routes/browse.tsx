@@ -164,7 +164,7 @@ function BrowsePage() {
 
           <ul className="grid gap-4 md:grid-cols-2">
             {filtered.map((d) => (
-              <li key={d.id} className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elevated">
+              <li key={d.id} className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elevated">
                 <div className="flex items-start gap-3">
                   <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xl text-primary">🎤</span>
                   <div className="min-w-0 flex-1">
