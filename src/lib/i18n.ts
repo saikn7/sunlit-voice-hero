@@ -267,7 +267,7 @@ const dict = {
     browseSub: "လှူဒါန်းထားသော အသံများကို ရှာဖွေပါ။ \"စိတ်ဓာတ်ရှာ\" ဟုပြောကြည့်ပါ။",
     searchBtn: "ရှာဖွေပါ",
     searchByTitle: "ခေါင်းစဉ်ဖြင့် ရှာပါ…",
-    catAll: "အားလုံး", catMotivation: "စိတ်ဓာတ်တက်ကြွမှု", catEducation: "ပညာရေး", catStories: "ဇာတ်လမ်း", catNews: "သတင်း", catPrayers: "ဆုတောင်း",
+    catAll: "အားလုံး", catMotivation: "စိတ်ဓာတ်တက်ကြွမှု", catEducation: "ပညာရေး", catStories: "ဇာတ်လမ်း", catNews: "သတင်း", catEntertainment: "ဖျော်ဖြေရေး", catPrayers: "ဆုတောင်း", catOther: "အခြား",
     signInToListen: "လှူဒါန်းအသံများ နားထောင်ရန် လော့ဂ်အင်ဝင်ပါ။",
     signInExplain: "လှူဒါန်းသူများကို ကာကွယ်ရန် အသံစာကြည့်တိုက်သည် လော့ဂ်အင်ဝင်သူများသာ ကြည့်ရှုနိုင်ပါသည်။",
     signInToBrowse: "ရှာဖွေရန် လော့ဂ်အင်",
