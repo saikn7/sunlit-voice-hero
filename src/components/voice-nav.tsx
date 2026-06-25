@@ -133,7 +133,15 @@ export function VoiceNav() {
     const r = createRecognizer(lang, { continuous: true });
     if (!r) return;
     recognizerRef.current = r;
-    r.onresult = (e: any) => handle(e.results?.[0]?.[0]?.transcript ?? "");
+    gotResultRef.current = false;
+    r.onresult = (e: any) => {
+      const transcript = e.results?.[0]?.[0]?.transcript ?? "";
+      if (transcript.trim()) {
+        gotResultRef.current = true;
+        retriedRef.current = false;
+        handle(transcript);
+      }
+    };
     r.onerror = (err: any) => {
       if (err?.error === "not-allowed") {
         respond(lang === "my" ? "မိုက်ခွင့်ပြုပါ။" : "Please allow microphone access.");
@@ -146,10 +154,24 @@ export function VoiceNav() {
       setListening(false);
     };
     r.onend = () => {
-      // onend fires after stop()/abort()/silence. Always reset state so the
-      // mic button works on the next press.
       if (recognizerRef.current === r) recognizerRef.current = null;
       setListening(false);
+      // Auto-retry once if nothing was heard.
+      if (!gotResultRef.current && !retriedRef.current) {
+        retriedRef.current = true;
+        showHint(lang === "my" ? "ထပ်ကြိုးစားနေသည်…" : "Retrying…", 1500);
+        setTimeout(() => { try { start(); } catch {} }, 250);
+      } else if (!gotResultRef.current && retriedRef.current) {
+        // Fall back to typed input
+        retriedRef.current = false;
+        setTypeMode(true);
+        showHint(
+          lang === "my"
+            ? "အသံ မဖမ်းမိပါ။ ရိုက်ထည့်ပါ။"
+            : "Couldn't hear you. Tap to type instead.",
+          4000,
+        );
+      }
     };
     try {
       r.start();
