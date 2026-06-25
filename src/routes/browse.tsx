@@ -441,21 +441,21 @@ function BrowsePage() {
                 )}
               </div>
 
-              {reportingId === d.id && (
-                <ReportPanel
-                  donationId={d.id}
-                  userId={user?.id ?? null}
-                  onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
-                />
-              )}
             </li>
           );
         })}
       </ul>
 
+      <ReportDialog
+        donationId={reportingId}
+        userId={user?.id ?? null}
+        onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
+      />
+
       {reportMsg && (
         <p role="status" className="rounded-2xl bg-primary/15 px-4 py-3 text-primary">{reportMsg}</p>
       )}
+
 
     </div>
   );
