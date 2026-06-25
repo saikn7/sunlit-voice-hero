@@ -54,8 +54,7 @@ function BrowsePage() {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const { data: donations = [], isLoading } = useQuery({
-    queryKey: ["donations", "browse", !!user],
-    enabled: !!user,
+    queryKey: ["donations", "browse"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("donations")
@@ -70,7 +69,6 @@ function BrowsePage() {
   // so the voice index updates without a page refresh.
   const qc = useQueryClient();
   React.useEffect(() => {
-    if (!user) return;
     const channel = supabase
       .channel("donations-voice-index")
       .on(
@@ -80,7 +78,7 @@ function BrowsePage() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, qc]);
+  }, [qc]);
 
   const filtered = React.useMemo(() => {
     let list = donations;
