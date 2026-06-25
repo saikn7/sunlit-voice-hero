@@ -92,16 +92,23 @@ export function VoiceNav() {
       respond("Voice input is not supported in this browser.");
       return;
     }
-    const r = createRecognizer(lang);
+    // Continuous listening so users (especially screen-reader users) don't
+    // need to re-tap the mic for every command.
+    const r = createRecognizer(lang, { continuous: true });
     if (!r) return;
     recognizerRef.current = r;
     r.onresult = (e: any) => handle(e.results?.[0]?.[0]?.transcript ?? "");
-    r.onerror = () => setListening(false);
+    r.onerror = (err: any) => {
+      if (err?.error === "not-allowed") {
+        respond(lang === "my" ? "မိုက်ခွင့်ပြုပါ။" : "Please allow microphone access.");
+      }
+      setListening(false);
+    };
     r.onend = () => setListening(false);
     try {
       r.start();
       setListening(true);
-      showHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say a page like 'browse' or 'donate'.", 2500);
+      showHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say 'play', 'pause', 'motivation', or 'play <title>'.", 3500);
     } catch {
       setListening(false);
     }
