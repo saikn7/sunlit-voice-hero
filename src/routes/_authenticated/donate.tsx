@@ -499,6 +499,18 @@ function YourDonations() {
     },
   });
 
+  const { data: donorScore = 0 } = useQuery({
+    queryKey: ["donor-score", user?.id, data.length],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: score, error } = await supabase.rpc("get_donor_score", { _user_id: user!.id });
+      if (error) throw error;
+      return (score as number) ?? 0;
+    },
+  });
+
+  const reportsTotal = data.reduce((s, d) => s + (d.report_count ?? 0), 0);
+
   const [signedUrls, setSignedUrls] = React.useState<Record<string, string>>({});
 
   async function ensureUrl(d: Donation) {
