@@ -44,13 +44,19 @@ export type Database = {
       donations: {
         Row: {
           audio_path: string
+          copyright_confirmed: boolean
           created_at: string
           description: string | null
           duration_seconds: number | null
+          hidden: boolean
           id: string
           keywords: string[]
           language: string
           mime_type: string | null
+          moderation_status: string
+          report_count: number
+          risk_categories: string[]
+          risk_flag: string
           search_text: unknown
           title: string
           updated_at: string
@@ -58,13 +64,19 @@ export type Database = {
         }
         Insert: {
           audio_path: string
+          copyright_confirmed?: boolean
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
+          hidden?: boolean
           id?: string
           keywords?: string[]
           language?: string
           mime_type?: string | null
+          moderation_status?: string
+          report_count?: number
+          risk_categories?: string[]
+          risk_flag?: string
           search_text?: unknown
           title: string
           updated_at?: string
@@ -72,13 +84,19 @@ export type Database = {
         }
         Update: {
           audio_path?: string
+          copyright_confirmed?: boolean
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
+          hidden?: boolean
           id?: string
           keywords?: string[]
           language?: string
           mime_type?: string | null
+          moderation_status?: string
+          report_count?: number
+          risk_categories?: string[]
+          risk_flag?: string
           search_text?: unknown
           title?: string
           updated_at?: string
@@ -124,6 +142,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          category: string
           created_at: string
           donation_id: string
           id: string
@@ -132,6 +151,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          category?: string
           created_at?: string
           donation_id: string
           id?: string
@@ -140,6 +160,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          category?: string
           created_at?: string
           donation_id?: string
           id?: string
@@ -183,6 +204,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_donor_score: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
