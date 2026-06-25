@@ -39,6 +39,8 @@ function BrowsePage() {
   const [input, setInput] = React.useState("");
   const [category, setCategory] = React.useState<string>("all");
   const [playingId, setPlayingId] = React.useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [hoverId, setHoverId] = React.useState<string | null>(null);
   const [signedUrls, setSignedUrls] = React.useState<Record<string, string>>({});
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
