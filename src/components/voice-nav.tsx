@@ -274,7 +274,7 @@ export function VoiceNav() {
         aria-pressed={typeMode}
         aria-label={typeMode ? "Hide keyboard input" : "Type a command"}
         title={lang === "my" ? "ရိုက်ထည့်ရန်" : "Type a command"}
-        className="fixed bottom-6 left-[calc(50%+3.5rem)] z-50 flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground border border-border shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:left-auto sm:right-24 sm:bottom-5"
+        className="fixed bottom-5 right-24 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground border border-border shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span aria-hidden className="text-xl">⌨️</span>
       </button>
@@ -293,7 +293,7 @@ export function VoiceNav() {
                 ? "Tap to retry microphone"
                 : "Start voice command (press Space)"
         }
-        className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex h-16 w-16 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:left-auto sm:right-5 sm:translate-x-0 sm:h-14 sm:w-14 ${
+        className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           listening
             ? "bg-destructive text-destructive-foreground animate-pulse"
             : voiceUnsupported
@@ -308,7 +308,7 @@ export function VoiceNav() {
               : "Press Space to talk"
         }
       >
-        <span aria-hidden className="text-3xl sm:text-2xl">🎙️</span>
+        <span aria-hidden className="text-2xl">🎙️</span>
       </button>
 
       {typeMode && (
