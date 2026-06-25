@@ -2,11 +2,21 @@
 // Combines normalized substring match + token overlap + Levenshtein on title.
 
 function normalize(s: string): string {
-  return (s ?? "")
+  // NFC keeps Burmese (Myanmar) Unicode intact while collapsing equivalent
+  // codepoint sequences so user-typed and stored text compare reliably.
+  let out = (s ?? "");
+  try { out = out.normalize("NFC"); } catch {}
+  return out
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// True when the string contains Myanmar script — used to enable
+// substring matching that doesn't rely on spaces between words.
+function hasMyanmar(s: string): boolean {
+  return /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(s);
 }
 
 // Common synonym groups so "voice donation" matches "donate voice", etc.
