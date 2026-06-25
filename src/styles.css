@@ -85,6 +85,7 @@
   --ring: oklch(0.78 0.17 145);
   --listening: oklch(0.78 0.20 145);
   --shadow-elevated: 0 20px 50px -20px oklch(0 0 0 / 0.55);
+  --gradient-hero: linear-gradient(135deg, oklch(0.22 0.05 145) 0%, oklch(0.28 0.08 145) 50%, oklch(0.34 0.10 150) 100%);
 }
 
 /* High-contrast accessibility theme — overrides both light & dark. */
