@@ -28,7 +28,7 @@ function detectIOS(): boolean {
 
 export function VoiceNav() {
   const navigate = useNavigate();
-  const { lang } = usePrefs();
+  const { lang, setTheme } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
   const [subtitle, setSubtitle] = React.useState<string>("");
@@ -67,6 +67,21 @@ export function VoiceNav() {
     try { console.log("[voice] transcript:", safe.trim()); } catch {}
     showSubtitle(safe.trim());
 
+    // Theme intent detection (English + Burmese). Must match clear intent only.
+    const themeText = safe.trim().toLowerCase();
+    const lightRe = /\b(light mode|switch to light|turn on light(?: mode)?|light theme|enable light)\b|အလင်းမုဒ်/;
+    const darkRe = /\b(dark mode|switch to dark|turn on dark(?: mode)?|dark theme|enable dark|night mode)\b|အမှောင်မုဒ်/;
+    if (lightRe.test(themeText)) {
+      setTheme("light");
+      respond(lang === "my" ? "အလင်းမုဒ်သို့ ပြောင်းပြီးပါပြီ။" : "Switched to light mode.");
+      return;
+    }
+    if (darkRe.test(themeText)) {
+      setTheme("dark");
+      respond(lang === "my" ? "အမှောင်မုဒ်သို့ ပြောင်းပြီးပါပြီ။" : "Switched to dark mode.");
+      return;
+    }
+
     // Let pages intercept (e.g. browse handles play/pause/play <title>)
     if (typeof window !== "undefined") {
       const ev = new CustomEvent("sv-voice", { detail: { text, raw: raw.trim() }, cancelable: true });
@@ -101,7 +116,7 @@ export function VoiceNav() {
     }
 
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
-  }, [lang, navigate, respond, showSubtitle]);
+  }, [lang, navigate, respond, showSubtitle, setTheme]);
 
   const teardownRecognizer = React.useCallback(() => {
     const r = recognizerRef.current;
