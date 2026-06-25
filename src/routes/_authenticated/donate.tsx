@@ -192,7 +192,7 @@ function DonatePage() {
       setMsg(null);
       setRecordedBlob(null);
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
-      setTitle(""); setDescription(""); setKeywordsStr(""); setElapsed(0);
+      setTitle(""); setDescription(""); setKeywordsStr(""); setElapsed(0); setCopyrightOk(false);
       qc.invalidateQueries({ queryKey: ["donations"] });
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
 
