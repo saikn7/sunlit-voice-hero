@@ -44,7 +44,7 @@ function HomePage() {
             <span className="inline-block rounded-full bg-card/80 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground shadow-sm">
               {t("heroBadge")}
             </span>
-            <h1 className="mt-3 text-balance text-3xl leading-[1.15] tracking-tight font-medium md:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="mt-3 text-balance text-2xl leading-[1.15] tracking-tight font-medium md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
               {t("heroHeadline")}
             </h1>
             <p className="mt-3 max-w-xl text-base font-normal text-foreground/75 md:text-lg">{t("heroSubtext")}</p>
