@@ -159,6 +159,34 @@ function BrowsePage() {
     }
   }, [donations]);
 
+  // Always-fresh donations ref so the voice handler never reads a stale list.
+  const donationsRef = React.useRef<Donation[]>(donations);
+  React.useEffect(() => { donationsRef.current = donations; }, [donations]);
+  const filteredRef = React.useRef<Donation[]>(filtered);
+  React.useEffect(() => { filteredRef.current = filtered; }, [filtered]);
+
+  const playByMatch = React.useCallback((term: string): Donation | null => {
+    const list = donationsRef.current;
+    // Normalize but strip ONLY ASCII punctuation — preserve Burmese characters.
+    const safeTerm = term.normalize("NFC").trim().replace(/[!-/:-@[-`{-~]+/g, " ").replace(/\s+/g, " ").trim();
+    if (!safeTerm) return null;
+    // 1) Exact title match (case-insensitive, NFC).
+    const exact = list.find((d) => (d.title || "").normalize("NFC").trim().toLowerCase() === safeTerm.toLowerCase());
+    if (exact) {
+      console.log(`[voice] Matched audio (exact): ${exact.title} | id: ${exact.id}`);
+      togglePlay(exact);
+      return exact;
+    }
+    // 2) Fuzzy (title + keywords + description).
+    const results = fuzzySearch(list, safeTerm);
+    if (results[0]) {
+      console.log(`[voice] Matched audio (fuzzy): ${results[0].title} | id: ${results[0].id}`);
+      togglePlay(results[0]);
+      return results[0];
+    }
+    return null;
+  }, [togglePlay]);
+
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
     const announce = (msg: string, silent = false) => {
@@ -174,7 +202,10 @@ function BrowsePage() {
     const onVoice = (e: Event) => {
       const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
       if (!detail) return;
+      // Preserve Burmese (and all Unicode letters); strip only ASCII punctuation.
+      const rawNFC = (detail.raw || "").normalize("NFC").trim();
       const text = detail.text.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+      console.log(`[voice] Voice input: ${rawNFC}`);
       const audio = audioRef.current;
 
       // Pause / stop
