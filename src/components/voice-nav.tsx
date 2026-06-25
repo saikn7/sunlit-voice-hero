@@ -245,21 +245,12 @@ export function VoiceNav() {
   };
 
   const onMicClick = () => {
-    if (isIOS) {
-      showHint(
-        lang === "my"
-          ? "iOS တွင် အသံ feature မပံ့ပိုးသေးပါ။"
-          : "Voice not supported on iOS yet.",
-        4000,
-      );
-      return;
-    }
-    if (voiceUnsupported) {
+    if (voiceUnsupported || isIOS) {
       setTypeMode((m) => !m);
       showHint(
         lang === "my"
-          ? "ဤ browser တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
-          : "Voice not supported in this browser. Tap to type instead.",
+          ? "iOS တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
+          : "Voice not supported on iOS. Tap to type instead.",
         4000,
       );
       return;
@@ -272,36 +263,23 @@ export function VoiceNav() {
       <button
         type="button"
         onClick={onMicClick}
-        aria-pressed={isIOS ? false : listening}
-        aria-disabled={isIOS}
+        aria-pressed={listening}
         aria-label={
-          isIOS
-            ? "Voice not supported on iOS yet"
-            : voiceUnsupported
-              ? "Type a command (voice not supported on this device)"
-              : listening
-                ? "Stop voice command"
-                : "Start voice command (press Space)"
+          voiceUnsupported || isIOS
+            ? "Type a command (voice not supported on this device)"
+            : listening
+              ? "Stop voice command"
+              : "Start voice command (press Space)"
         }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          isIOS
-            ? "bg-muted text-muted-foreground opacity-60 cursor-not-allowed"
-            : listening
-              ? "bg-destructive text-destructive-foreground animate-pulse"
-              : "bg-primary text-primary-foreground"
+          listening ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-primary text-primary-foreground"
         }`}
-        title={
-          isIOS
-            ? "Voice not supported on iOS yet"
-            : voiceUnsupported
-              ? "Tap to type a command"
-              : "Press Space to talk"
-        }
+        title={voiceUnsupported || isIOS ? "Tap to type a command" : "Press Space to talk"}
       >
-        <span aria-hidden className="text-2xl">{isIOS ? "🚫" : voiceUnsupported ? "⌨️" : "🎙️"}</span>
+        <span aria-hidden className="text-2xl">{voiceUnsupported || isIOS ? "⌨️" : "🎙️"}</span>
       </button>
 
-      {typeMode && !isIOS && (
+      {typeMode && (
         <form
           onSubmit={submitTyped}
           className="fixed bottom-24 right-5 z-50 flex max-w-[92vw] items-center gap-2 rounded-2xl border border-border bg-card/95 p-2 shadow-elevated"
