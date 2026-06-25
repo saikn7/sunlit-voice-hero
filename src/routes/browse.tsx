@@ -8,8 +8,17 @@ import { fuzzySearch, rankMatches, nfc } from "@/lib/fuzzy";
 import { cancelSpeech } from "@/lib/speech";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TKey } from "@/lib/i18n";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Donation = Tables<"donations">;
+
 
 export const Route = createFileRoute("/browse")({
   component: BrowsePage,
