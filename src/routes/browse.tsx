@@ -66,6 +66,22 @@ function BrowsePage() {
     },
   });
 
+  // Realtime: refetch donations the moment a new one is inserted anywhere,
+  // so the voice index updates without a page refresh.
+  const qc = useQueryClient();
+  React.useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("donations-voice-index")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "donations" },
+        () => qc.invalidateQueries({ queryKey: ["donations"] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, qc]);
+
   const filtered = React.useMemo(() => {
     let list = donations;
     if (category !== "all") {
