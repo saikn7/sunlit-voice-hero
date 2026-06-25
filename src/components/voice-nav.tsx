@@ -28,7 +28,7 @@ function detectIOS(): boolean {
 
 export function VoiceNav() {
   const navigate = useNavigate();
-  const { lang, setTheme } = usePrefs();
+  const { lang, setTheme, setLang } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
   const [subtitle, setSubtitle] = React.useState<string>("");
