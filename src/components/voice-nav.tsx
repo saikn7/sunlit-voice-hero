@@ -116,7 +116,7 @@ export function VoiceNav() {
     }
 
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
-  }, [lang, navigate, respond, showSubtitle]);
+  }, [lang, navigate, respond, showSubtitle, setTheme]);
 
   const teardownRecognizer = React.useCallback(() => {
     const r = recognizerRef.current;
