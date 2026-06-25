@@ -38,6 +38,7 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
           {navItem("/", t("home"))}
           {navItem("/browse", t("browse"))}
           {navItem("/donate", t("donateMode"))}
+          {user && navItem("/profile", "Profile")}
           {navItem("/contact", t("contact"))}
         </nav>
 
