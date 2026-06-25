@@ -64,7 +64,9 @@ export function VoiceNav() {
 
   const handle = React.useCallback((raw: string) => {
     const safe = (raw || "").normalize("NFC");
-    const text = safe.trim().toLowerCase();
+    const hasMyanmar = /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(safe);
+    // Don't lowercase Burmese — Unicode case folding can corrupt it.
+    const text = hasMyanmar ? safe.trim() : safe.trim().toLowerCase();
     if (!text) return;
     try { console.log("[voice] transcript:", safe.trim()); } catch {}
     showSubtitle(safe.trim());
