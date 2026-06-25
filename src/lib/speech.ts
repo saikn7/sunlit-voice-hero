@@ -129,12 +129,34 @@ export function speak(text: string, opts: SpeakOptions = {}) {
     }
   };
 
-  // Gemini TTS quota is frequently exhausted (429). Use the free browser
-  // SpeechSynthesis API directly so the app keeps working without external
-  // API calls. `synthesizeSpeech` remains exported for callers that opt in,
-  // but `speak()` no longer depends on it.
-  void token;
-  playBrowserFallback();
+  // Prefer Gemini TTS for natural Burmese + English voice. Fall back to the
+  // free browser SpeechSynthesis API on any failure (quota 429, network, etc.)
+  // so the app keeps talking.
+  if (geminiTtsDisabled) {
+    playBrowserFallback();
+    return;
+  }
+
+  (async () => {
+    try {
+      const { audio, mime } = await synthesizeSpeech({ data: { text, lang } });
+      if (token !== currentToken) return;
+      const src = `data:${mime};base64,${audio}`;
+      const a = new Audio(src);
+      currentAudio = a;
+      a.onplay = () => opts.onStart?.();
+      a.onended = () => { if (token === currentToken) { currentAudio = null; opts.onEnd?.(); } };
+      a.onerror = () => { if (token === currentToken) { currentAudio = null; playBrowserFallback(); } };
+      await a.play();
+    } catch (err: any) {
+      const msg = String(err?.message ?? err ?? "");
+      if (/\b(429|quota|RESOURCE_EXHAUSTED|401|403|Missing Gemini)/i.test(msg)) {
+        geminiTtsDisabled = true;
+      }
+      console.warn("[tts] Gemini failed, falling back to browser voice:", msg);
+      if (token === currentToken) playBrowserFallback();
+    }
+  })();
 }
 
 // ----------------------------------------------------------------------------
