@@ -6,11 +6,17 @@ function normalize(s: string): string {
   // codepoint sequences so user-typed and stored text compare reliably.
   let out = (s ?? "");
   try { out = out.normalize("NFC"); } catch {}
+  // Skip toLowerCase for Burmese-containing strings (Unicode-safety rule).
+  if (!/[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(out)) out = out.toLowerCase();
   return out
-    .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// NFC-only normalize (preserves case) — used for exact Burmese comparisons.
+export function nfc(s: string): string {
+  try { return (s ?? "").normalize("NFC").trim(); } catch { return (s ?? "").trim(); }
 }
 
 // True when the string contains Myanmar script — used to enable
@@ -133,4 +139,81 @@ export function fuzzySearch<T extends Searchable>(items: T[], query: string): T[
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score);
   return scored.map((s) => s.it);
+}
+
+// Ranked match result with a normalized 0..1 confidence score.
+export type RankedMatch<T> = { item: T; score: number; confidence: number; reason: string };
+
+// Compute a 0..1 confidence for `query` against `item`, combining:
+//  P1 exact title match, P2 high similarity, P3 keyword/token overlap, P4 substring.
+export function scoreMatch<T extends Searchable>(item: T, query: string): { confidence: number; reason: string } {
+  const qNFC = nfc(query);
+  const tNFC = nfc(item.title || "");
+  if (!qNFC || !tNFC) return { confidence: 0, reason: "empty" };
+
+  // P1 — exact match (NFC, case-insensitive only for non-Burmese).
+  const burmese = /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(qNFC + tNFC);
+  const eqA = burmese ? qNFC : qNFC.toLowerCase();
+  const eqB = burmese ? tNFC : tNFC.toLowerCase();
+  if (eqA === eqB) return { confidence: 1, reason: "exact-title" };
+
+  const qn = normalize(query);
+  const tn = normalize(item.title || "");
+  const kn = normalize((item.keywords ?? []).join(" "));
+  const dn = normalize(item.description ?? "");
+
+  // P2 — similarity via Levenshtein on title (and space-stripped variant for Burmese).
+  let sim = 0;
+  if (qn && tn) {
+    const d = levenshtein(qn, tn);
+    sim = 1 - d / Math.max(qn.length, tn.length);
+    if (burmese) {
+      const a = qn.replace(/\s+/g, "");
+      const b = tn.replace(/\s+/g, "");
+      if (a && b) {
+        const d2 = levenshtein(a, b);
+        const sim2 = 1 - d2 / Math.max(a.length, b.length);
+        sim = Math.max(sim, sim2);
+      }
+    }
+  }
+  if (sim >= 0.8) return { confidence: 0.8 + (sim - 0.8) * 0.95, reason: `similarity ${sim.toFixed(2)}` };
+
+  // P2.5 — full substring containment of query in title (strong signal).
+  const qJoined = qn.replace(/\s+/g, "");
+  const tJoined = tn.replace(/\s+/g, "");
+  if (qJoined.length >= 2 && tJoined.includes(qJoined)) {
+    const ratio = qJoined.length / Math.max(qJoined.length, tJoined.length);
+    return { confidence: Math.min(0.95, 0.7 + ratio * 0.25), reason: "title-substring" };
+  }
+
+  // P3 — keyword / token overlap.
+  const qTokens = qn.split(" ").filter(Boolean);
+  const kTokens = new Set([...tn.split(" "), ...kn.split(" ")].filter(Boolean));
+  if (qTokens.length && kTokens.size) {
+    const expanded = expandSynonyms(qTokens);
+    let hit = 0;
+    for (const tok of expanded) if (kTokens.has(tok)) hit++;
+    const overlap = hit / qTokens.length;
+    if (overlap > 0) {
+      // P4 — also weight description substring presence weakly.
+      const descBoost = qJoined.length >= 3 && dn.replace(/\s+/g, "").includes(qJoined) ? 0.1 : 0;
+      return { confidence: Math.min(0.85, overlap * 0.7 + descBoost), reason: `tokens ${hit}/${qTokens.length}` };
+    }
+  }
+
+  // Fallback: similarity below 0.8 still reported as low confidence.
+  return { confidence: Math.max(0, sim * 0.6), reason: `weak-sim ${sim.toFixed(2)}` };
+}
+
+export function rankMatches<T extends Searchable>(items: T[], query: string): RankedMatch<T>[] {
+  const q = nfc(query);
+  if (!q) return [];
+  return items
+    .map((item) => {
+      const { confidence, reason } = scoreMatch(item, q);
+      return { item, score: confidence, confidence, reason };
+    })
+    .filter((r) => r.confidence > 0)
+    .sort((a, b) => b.confidence - a.confidence);
 }

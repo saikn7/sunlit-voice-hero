@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePrefs } from "@/lib/prefs-context";
-import { fuzzySearch } from "@/lib/fuzzy";
+import { fuzzySearch, rankMatches, nfc } from "@/lib/fuzzy";
 import { cancelSpeech } from "@/lib/speech";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TKey } from "@/lib/i18n";
@@ -163,26 +163,32 @@ function BrowsePage() {
   const filteredRef = React.useRef<Donation[]>(filtered);
   React.useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
+  const CONFIDENCE_THRESHOLD = 0.75;
+
   const playByMatch = React.useCallback((term: string): Donation | null => {
     const list = donationsRef.current;
     // Normalize but strip ONLY ASCII punctuation — preserve Burmese characters.
-    const safeTerm = term.normalize("NFC").trim().replace(/[!-/:-@[-`{-~]+/g, " ").replace(/\s+/g, " ").trim();
+    const safeTerm = nfc(term).replace(/[!-/:-@[-`{-~]+/g, " ").replace(/\s+/g, " ").trim();
     if (!safeTerm) return null;
-    // 1) Exact title match (case-insensitive, NFC).
-    const exact = list.find((d) => (d.title || "").normalize("NFC").trim().toLowerCase() === safeTerm.toLowerCase());
-    if (exact) {
-      console.log(`[voice] Matched audio (exact): ${exact.title} | id: ${exact.id}`);
-      togglePlay(exact);
-      return exact;
+
+    // Rank ALL candidates, sort by confidence DESC, log every candidate.
+    const ranked = rankMatches(list, safeTerm);
+    console.log(`[voice] Voice: ${safeTerm}`);
+    for (const r of ranked.slice(0, 5)) {
+      console.log(`[voice]   Match: ${r.item.title} → score ${r.confidence.toFixed(3)} (${r.reason})`);
     }
-    // 2) Fuzzy (title + keywords + description).
-    const results = fuzzySearch(list, safeTerm);
-    if (results[0]) {
-      console.log(`[voice] Matched audio (fuzzy): ${results[0].title} | id: ${results[0].id}`);
-      togglePlay(results[0]);
-      return results[0];
+
+    const best = ranked[0];
+    if (!best || best.confidence < CONFIDENCE_THRESHOLD) {
+      console.log(`[voice] Selected: none (best ${best ? best.confidence.toFixed(2) : "0"} < ${CONFIDENCE_THRESHOLD})`);
+      window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
+        detail: { msg: "No exact match found", silent: false },
+      }));
+      return null;
     }
-    return null;
+    console.log(`[voice] Selected: ${best.item.title} | id: ${best.item.id} | confidence: ${best.confidence.toFixed(3)}`);
+    togglePlay(best.item);
+    return best.item;
   }, [togglePlay]);
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
