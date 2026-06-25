@@ -272,21 +272,36 @@ export function VoiceNav() {
       <button
         type="button"
         onClick={onMicClick}
-        aria-pressed={listening}
+        aria-pressed={isIOS ? false : listening}
+        aria-disabled={isIOS}
         aria-label={
-          voiceUnsupported || isIOS
-            ? "Type a command (voice not supported on this device)"
-            : listening
-              ? "Stop voice command"
-              : "Start voice command (press Space)"
+          isIOS
+            ? "Voice not supported on iOS yet"
+            : voiceUnsupported
+              ? "Type a command (voice not supported on this device)"
+              : listening
+                ? "Stop voice command"
+                : "Start voice command (press Space)"
         }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          listening ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-primary text-primary-foreground"
+          isIOS
+            ? "bg-muted text-muted-foreground opacity-60 cursor-not-allowed"
+            : listening
+              ? "bg-destructive text-destructive-foreground animate-pulse"
+              : "bg-primary text-primary-foreground"
         }`}
-        title={voiceUnsupported || isIOS ? "Tap to type a command" : "Press Space to talk"}
+        title={
+          isIOS
+            ? "Voice not supported on iOS yet"
+            : voiceUnsupported
+              ? "Tap to type a command"
+              : "Press Space to talk"
+        }
       >
-        <span aria-hidden className="text-2xl">{voiceUnsupported || isIOS ? "⌨️" : "🎙️"}</span>
+        <span aria-hidden className="text-2xl">{isIOS ? "🚫" : voiceUnsupported ? "⌨️" : "🎙️"}</span>
       </button>
+
+      {typeMode && !isIOS && (
 
       {typeMode && (
         <form
