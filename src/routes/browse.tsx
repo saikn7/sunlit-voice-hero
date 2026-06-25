@@ -51,6 +51,8 @@ function BrowsePage() {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [hoverId, setHoverId] = React.useState<string | null>(null);
   const [signedUrls, setSignedUrls] = React.useState<Record<string, string>>({});
+  const [reportingId, setReportingId] = React.useState<string | null>(null);
+  const [reportMsg, setReportMsg] = React.useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const { data: donations = [], isLoading } = useQuery({
@@ -387,6 +389,7 @@ function BrowsePage() {
                   <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
                     {d.title || t("untitled")}
                   </h3>
+                  <StatusBadge donation={d} />
                   {d.description && (
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
                   )}
@@ -403,24 +406,136 @@ function BrowsePage() {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => togglePlay(d)}
-                aria-pressed={showPause}
-                className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
-                  showPause
-                    ? "bg-accent text-accent-foreground hover:opacity-95"
-                    : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
-                }`}
-              >
-                <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
-                {showPause ? t("pause") : t("play")}
-              </button>
+              <div className="mt-auto flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => togglePlay(d)}
+                  aria-pressed={showPause}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
+                    showPause
+                      ? "bg-accent text-accent-foreground hover:opacity-95"
+                      : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
+                  }`}
+                >
+                  <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
+                  {showPause ? t("pause") : t("play")}
+                </button>
+                {user && user.id !== d.user_id && (
+                  <button
+                    type="button"
+                    onClick={() => { setReportingId(d.id); setReportMsg(null); }}
+                    className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+                    aria-label="Report audio"
+                  >
+                    ⚠️ Report
+                  </button>
+                )}
+              </div>
+
+              {reportingId === d.id && (
+                <ReportPanel
+                  donationId={d.id}
+                  userId={user?.id ?? null}
+                  onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
+                />
+              )}
             </li>
           );
         })}
       </ul>
 
+      {reportMsg && (
+        <p role="status" className="rounded-2xl bg-primary/15 px-4 py-3 text-primary">{reportMsg}</p>
+      )}
+
+    </div>
+  );
+}
+
+function StatusBadge({ donation }: { donation: Donation }) {
+  const flag = donation.risk_flag;
+  const cnt = donation.report_count ?? 0;
+  if (flag === "under_review" || (cnt > 5 && cnt <= 15)) {
+    return (
+      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+        ⚠️ Under Review
+      </span>
+    );
+  }
+  if (flag === "risky") {
+    return (
+      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-semibold text-destructive">
+        ⚠️ Risky Content
+      </span>
+    );
+  }
+  return null;
+}
+
+const REPORT_REASONS: { id: string; label: string }[] = [
+  { id: "wrong_content", label: "Wrong Content" },
+  { id: "offensive", label: "Offensive Speech" },
+  { id: "copyright", label: "Copyright Issue" },
+  { id: "spam", label: "Spam Recording" },
+];
+
+function ReportPanel({
+  donationId,
+  userId,
+  onClose,
+}: {
+  donationId: string;
+  userId: string | null;
+  onClose: (msg?: string) => void;
+}) {
+  const qc = useQueryClient();
+  const [submitting, setSubmitting] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
+
+  async function submit(reasonId: string, label: string) {
+    if (!userId) { setErr("Please sign in to report."); return; }
+    setSubmitting(true);
+    setErr(null);
+    const { error } = await supabase.from("reports").insert({
+      donation_id: donationId,
+      reporter_id: userId,
+      reason: label,
+      category: reasonId,
+    });
+    setSubmitting(false);
+    if (error) {
+      if (error.code === "23505") { onClose("You already reported this audio."); return; }
+      setErr(error.message);
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["donations"] });
+    onClose("Report submitted. Thank you for helping keep the community safe.");
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-secondary/40 p-3">
+      <p className="mb-2 text-sm font-semibold">Why are you reporting this?</p>
+      <div className="grid grid-cols-2 gap-2">
+        {REPORT_REASONS.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            disabled={submitting}
+            onClick={() => submit(r.id, r.label)}
+            className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+      {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
+      <button
+        type="button"
+        onClick={() => onClose()}
+        className="mt-2 text-xs text-muted-foreground underline"
+      >
+        Cancel
+      </button>
     </div>
   );
 }

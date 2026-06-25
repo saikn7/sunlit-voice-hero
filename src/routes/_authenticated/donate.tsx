@@ -1,9 +1,11 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePrefs } from "@/lib/prefs-context";
+import { moderateDonation } from "@/lib/moderation.functions";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Donation = Tables<"donations">;
@@ -43,10 +45,12 @@ function DonatePage() {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [keywordsStr, setKeywordsStr] = React.useState("");
+  const [copyrightOk, setCopyrightOk] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [elapsed, setElapsed] = React.useState(0);
+  const moderate = useServerFn(moderateDonation);
   const [confirmation, setConfirmation] = React.useState<{
     title: string;
     durationSeconds: number;
@@ -152,17 +156,29 @@ function DonatePage() {
         .map((k) => k.trim().toLowerCase())
         .filter(Boolean);
 
-      const { error: insErr } = await supabase.from("donations").insert({
-        user_id: user.id,
-        title: title.trim() || t("untitled"),
-        description: description.trim() || null,
-        keywords,
-        language: lang,
-        audio_path: path,
-        mime_type: mime,
-        duration_seconds: elapsed || null,
-      });
+      const { data: inserted, error: insErr } = await supabase
+        .from("donations")
+        .insert({
+          user_id: user.id,
+          title: title.trim() || t("untitled"),
+          description: description.trim() || null,
+          keywords,
+          language: lang,
+          audio_path: path,
+          mime_type: mime,
+          duration_seconds: elapsed || null,
+          copyright_confirmed: copyrightOk,
+        })
+        .select("id")
+        .single();
       if (insErr) throw insErr;
+
+      // Fire-and-forget AI moderation; runs in background, updates risk_flag.
+      if (inserted?.id) {
+        moderate({ data: { donationId: inserted.id } }).catch((err) => {
+          console.warn("Moderation failed:", err);
+        });
+      }
 
       const submittedTitle = title.trim() || t("untitled");
       const submittedDuration = elapsed;
@@ -176,7 +192,7 @@ function DonatePage() {
       setMsg(null);
       setRecordedBlob(null);
       if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
-      setTitle(""); setDescription(""); setKeywordsStr(""); setElapsed(0);
+      setTitle(""); setDescription(""); setKeywordsStr(""); setElapsed(0); setCopyrightOk(false);
       qc.invalidateQueries({ queryKey: ["donations"] });
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -406,6 +422,24 @@ function DonatePage() {
           </span>
         </label>
 
+        <label className="flex items-start gap-3 rounded-2xl border border-border bg-secondary/40 p-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={copyrightOk}
+            onChange={(e) => setCopyrightOk(e.target.checked)}
+            className="mt-1 h-5 w-5 accent-primary"
+            required
+          />
+          <span className="text-sm">
+            <span className="font-semibold">I confirm that I personally recorded this audio and own the rights to it.</span>
+            <span className="block text-muted-foreground mt-0.5">
+              Uploading audio you do not own may be flagged and removed.
+            </span>
+          </span>
+        </label>
+
+
+
 
         {error && (
           <p
@@ -426,7 +460,7 @@ function DonatePage() {
 
         <button
           type="submit"
-          disabled={busy || !recordedBlob}
+          disabled={busy || !recordedBlob || !copyrightOk}
           className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-lg font-bold text-primary-foreground shadow-elevated transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span aria-hidden>♥</span>
@@ -465,6 +499,18 @@ function YourDonations() {
     },
   });
 
+  const { data: donorScore = 0 } = useQuery({
+    queryKey: ["donor-score", user?.id, data.length],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: score, error } = await supabase.rpc("get_donor_score", { _user_id: user!.id });
+      if (error) throw error;
+      return (score as number) ?? 0;
+    },
+  });
+
+  const reportsTotal = data.reduce((s, d) => s + (d.report_count ?? 0), 0);
+
   const [signedUrls, setSignedUrls] = React.useState<Record<string, string>>({});
 
   async function ensureUrl(d: Donation) {
@@ -495,7 +541,18 @@ function YourDonations() {
 
   return (
     <section aria-labelledby="my-donations" className="grid gap-3">
-      <h2 id="my-donations" className="text-2xl font-bold">{t("yourDonations")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="my-donations" className="text-2xl font-bold">{t("yourDonations")}</h2>
+        {user && (
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2 text-sm">
+            <span className="font-semibold">Voice Donor Score</span>
+            <span aria-label={`${donorScore} of 5 stars`} className="text-base text-amber-500">
+              {"★".repeat(donorScore)}{"☆".repeat(5 - donorScore)}
+            </span>
+            <span className="text-muted-foreground">· {data.length} uploaded · {reportsTotal} reports</span>
+          </div>
+        )}
+      </div>
       {isLoading && <p>{t("loading")}</p>}
       {!isLoading && data.length === 0 && (
         <p className="text-muted-foreground">— —</p>
@@ -506,7 +563,32 @@ function YourDonations() {
             <div className="flex flex-wrap items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-lg font-semibold">{d.title}</p>
-                {d.description && <p className="text-sm text-muted-foreground">{d.description}</p>}
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                  {d.hidden && (
+                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 font-semibold text-destructive">
+                      Hidden ({d.report_count} reports)
+                    </span>
+                  )}
+                  {!d.hidden && d.risk_flag === "under_review" && (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-700 dark:text-amber-400">
+                      ⚠️ Under Review
+                    </span>
+                  )}
+                  {!d.hidden && d.risk_flag === "risky" && (
+                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 font-semibold text-destructive">
+                      ⚠️ Risky Content
+                    </span>
+                  )}
+                  {d.moderation_status === "pending" && (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
+                      Moderation pending…
+                    </span>
+                  )}
+                  {d.risk_categories && d.risk_categories.length > 0 && (
+                    <span className="text-muted-foreground">{d.risk_categories.join(", ")}</span>
+                  )}
+                </div>
+                {d.description && <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>}
                 {d.keywords?.length > 0 && (
                   <p className="text-sm text-muted-foreground">#{d.keywords.join(" #")}</p>
                 )}
