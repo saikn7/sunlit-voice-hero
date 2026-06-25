@@ -51,6 +51,8 @@ function BrowsePage() {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [hoverId, setHoverId] = React.useState<string | null>(null);
   const [signedUrls, setSignedUrls] = React.useState<Record<string, string>>({});
+  const [reportingId, setReportingId] = React.useState<string | null>(null);
+  const [reportMsg, setReportMsg] = React.useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const { data: donations = [], isLoading } = useQuery({
