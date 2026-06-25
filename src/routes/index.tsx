@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { usePrefs } from "@/lib/prefs-context";
 import { useAuth } from "@/lib/auth-context";
+import heroBg from "@/assets/hero-bg.jpg";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
