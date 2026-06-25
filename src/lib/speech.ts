@@ -1,12 +1,9 @@
-// Gemini-powered TTS + STT (Burmese-friendly), with browser SpeechRecognition fallback for compatibility.
+// Browser-first speech: Web Speech API for recognition (when available, e.g.
+// Chrome/Edge/Safari) with a MediaRecorder + Gemini fallback for other
+// browsers. TTS uses the free SpeechSynthesis API to avoid quota issues.
 import type { Lang } from "./i18n";
 
 import { transcribeAudio } from "./stt.functions";
-import { synthesizeSpeech } from "./tts.functions";
-
-// Remember whether Gemini TTS has hit a hard quota/auth wall this session so
-// we don't keep retrying it for every utterance.
-let geminiTtsDisabled = false;
 
 export function isSpeechSynthesisSupported(): boolean {
   return typeof window !== "undefined" && typeof Audio !== "undefined";
@@ -14,12 +11,20 @@ export function isSpeechSynthesisSupported(): boolean {
 
 export function isSpeechRecognitionSupported(): boolean {
   if (typeof window === "undefined") return false;
-  return (
+  const w = window as any;
+  const hasWebSpeech = !!(w.SpeechRecognition || w.webkitSpeechRecognition);
+  const hasRecorder =
     typeof navigator !== "undefined" &&
     !!navigator.mediaDevices &&
     typeof navigator.mediaDevices.getUserMedia === "function" &&
-    typeof window.MediaRecorder !== "undefined"
-  );
+    typeof window.MediaRecorder !== "undefined";
+  return hasWebSpeech || hasRecorder;
+}
+
+export function hasNativeWebSpeech(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as any;
+  return !!(w.SpeechRecognition || w.webkitSpeechRecognition);
 }
 
 const LANG_TAG: Record<Lang, string> = { en: "en-US", my: "my-MM" };
@@ -129,34 +134,9 @@ export function speak(text: string, opts: SpeakOptions = {}) {
     }
   };
 
-  // Prefer Gemini TTS for natural Burmese + English voice. Fall back to the
-  // free browser SpeechSynthesis API on any failure (quota 429, network, etc.)
-  // so the app keeps talking.
-  if (geminiTtsDisabled) {
-    playBrowserFallback();
-    return;
-  }
-
-  (async () => {
-    try {
-      const { audio, mime } = await synthesizeSpeech({ data: { text, lang } });
-      if (token !== currentToken) return;
-      const src = `data:${mime};base64,${audio}`;
-      const a = new Audio(src);
-      currentAudio = a;
-      a.onplay = () => opts.onStart?.();
-      a.onended = () => { if (token === currentToken) { currentAudio = null; opts.onEnd?.(); } };
-      a.onerror = () => { if (token === currentToken) { currentAudio = null; playBrowserFallback(); } };
-      await a.play();
-    } catch (err: any) {
-      const msg = String(err?.message ?? err ?? "");
-      if (/\b(429|quota|RESOURCE_EXHAUSTED|401|403|Missing Gemini)/i.test(msg)) {
-        geminiTtsDisabled = true;
-      }
-      console.warn("[tts] Gemini failed, falling back to browser voice:", msg);
-      if (token === currentToken) playBrowserFallback();
-    }
-  })();
+  // Use the free browser SpeechSynthesis API — no API quota, instant.
+  void token;
+  playBrowserFallback();
 }
 
 // ----------------------------------------------------------------------------
@@ -206,9 +186,76 @@ async function blobToBase64(blob: Blob): Promise<string> {
   }
   return btoa(bin);
 }
+function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiRecognizer | null {
+  if (typeof window === "undefined") return null;
+  const w = window as any;
+  const Impl = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  if (!Impl) return null;
 
-export function createRecognizer(lang: Lang): GeminiRecognizer | null {
+  let stopped = false;
+  let aborted = false;
+  const sr = new Impl();
+  sr.lang = LANG_TAG[lang];
+  sr.continuous = !!opts.continuous;
+  sr.interimResults = false;
+  sr.maxAlternatives = 1;
+
+  const rec: GeminiRecognizer = {
+    lang: LANG_TAG[lang],
+    start() {
+      stopped = false;
+      aborted = false;
+      try { sr.start(); } catch { /* already started */ }
+    },
+    stop() {
+      stopped = true;
+      try { sr.stop(); } catch {}
+    },
+    abort() {
+      aborted = true;
+      stopped = true;
+      try { sr.abort(); } catch {}
+    },
+  };
+
+  sr.onresult = (e: any) => {
+    if (aborted) return;
+    // Emit only finalized results.
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) {
+        const t = r[0]?.transcript ?? "";
+        if (t.trim()) rec.onresult?.({ results: [[{ transcript: t }]] });
+      }
+    }
+  };
+  sr.onerror = (e: any) => {
+    if (e?.error === "no-speech" || e?.error === "aborted") return; // benign
+    rec.onerror?.({ error: e?.error || "audio-capture", message: e?.message });
+  };
+  sr.onend = () => {
+    // Auto-restart in continuous mode unless user stopped.
+    if (opts.continuous && !stopped && !aborted) {
+      try { sr.start(); return; } catch {}
+    }
+    rec.onend?.();
+  };
+
+  return rec;
+}
+
+
+export type RecognizerOptions = { continuous?: boolean };
+
+export function createRecognizer(lang: Lang, opts: RecognizerOptions = {}): GeminiRecognizer | null {
   if (!isSpeechRecognitionSupported()) return null;
+
+  // Prefer the native Web Speech API when available — it's instant, free,
+  // supports continuous listening, and doesn't need a server roundtrip.
+  if (hasNativeWebSpeech()) {
+    const native = createWebSpeechRecognizer(lang, opts);
+    if (native) return native;
+  }
 
   let stream: MediaStream | null = null;
   let recorder: MediaRecorder | null = null;
