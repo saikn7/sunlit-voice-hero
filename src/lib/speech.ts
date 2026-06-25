@@ -159,6 +159,8 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
 
           stream = await navigator.mediaDevices.getUserMedia({
             audio: {
+              sampleRate: { ideal: 16000 },
+              channelCount: { ideal: 1 },
               echoCancellation: true,
               noiseSuppression: true,
               autoGainControl: true,
