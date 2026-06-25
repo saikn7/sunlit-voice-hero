@@ -422,6 +422,24 @@ function DonatePage() {
           </span>
         </label>
 
+        <label className="flex items-start gap-3 rounded-2xl border border-border bg-secondary/40 p-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={copyrightOk}
+            onChange={(e) => setCopyrightOk(e.target.checked)}
+            className="mt-1 h-5 w-5 accent-primary"
+            required
+          />
+          <span className="text-sm">
+            <span className="font-semibold">I confirm that I personally recorded this audio and own the rights to it.</span>
+            <span className="block text-muted-foreground mt-0.5">
+              Uploading audio you do not own may be flagged and removed.
+            </span>
+          </span>
+        </label>
+
+
+
 
         {error && (
           <p
