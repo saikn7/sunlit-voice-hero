@@ -120,10 +120,15 @@ function BrowsePage() {
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
-    const announce = (msg: string) => {
-      window.dispatchEvent(new CustomEvent("sv-voice-feedback", { detail: { msg } }));
+    const announce = (msg: string, silent = false) => {
+      window.dispatchEvent(new CustomEvent("sv-voice-feedback", { detail: { msg, silent } }));
     };
-    const catIds = CATEGORIES.map((c) => c.id);
+
+    const applyCategory = (id: string) => {
+      setCategory(id);
+      const label = CATEGORY_LABELS[id] ?? id;
+      announce(id === "all" ? "Showing all audio" : `Showing ${label}`, true);
+    };
 
     const onVoice = (e: Event) => {
       const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
@@ -132,16 +137,16 @@ function BrowsePage() {
       const audio = audioRef.current;
 
       // Pause / stop
-      if (/^(pause|stop|halt|quiet|silent|mute)$/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
+      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
         if (audio && !audio.paused) audio.pause();
-        announce("Paused");
+        announce("Paused", true);
         e.preventDefault();
         return;
       }
       // Resume current
-      if (/^(resume|continue|keep playing|unpause)$/i.test(text)) {
+      if (/\b(resume|continue|keep playing|unpause)\b/i.test(text)) {
         if (audio && audio.paused && playingId) audio.play().catch(() => {});
-        announce("Resuming");
+        announce("Resuming", true);
         e.preventDefault();
         return;
       }
@@ -149,39 +154,33 @@ function BrowsePage() {
       if (/^play$/i.test(text)) {
         if (audio && playingId && audio.paused) audio.play().catch(() => {});
         else if (!playingId && filtered[0]) togglePlay(filtered[0]);
-        announce("Playing");
+        announce("Playing", true);
         e.preventDefault();
         return;
       }
 
-      // Category by bare name: "all", "motivation", "education", "stories", "news", "prayers"
-      const bareCat = catIds.find((id) => new RegExp(`\\b${id}\\b`, "i").test(text));
-      if (bareCat && /^(all|motivation|education|stor(?:y|ies)|news|prayers?)$/i.test(text)) {
-        const norm = bareCat === "stories" ? "stories" : bareCat;
-        setCategory(norm);
-        announce(norm === "all" ? "Showing all audio" : `Filtering ${norm}`);
+      // Category by bare name or short phrase
+      const bareCat = CATEGORIES.find((c) => c.match.test(text));
+      if (bareCat && text.split(" ").length <= 3) {
+        applyCategory(bareCat.id);
         e.preventDefault();
         return;
       }
 
       // "play/find/show <term>" — category shortcut or fuzzy title match
-      const m = text.match(/^(?:play|listen to|find|search|open|show|filter)\s+(.+)$/i);
+      const m = text.match(/^(?:play|listen to|find|search|open|show|filter|category)\s+(.+)$/i);
       if (m) {
         const term = m[1].trim();
-        const termLower = term.toLowerCase();
-        const cat = CATEGORIES.find(
-          (c) => c.id !== "all" && (c.id === termLower || termLower.includes(c.id) || c.id.includes(termLower)),
-        );
+        const cat = CATEGORIES.find((c) => c.id !== "all" && c.match.test(term));
         if (cat) {
-          setCategory(cat.id);
-          announce(`Filtering ${cat.id}`);
+          applyCategory(cat.id);
           e.preventDefault();
           return;
         }
         const results = fuzzySearch(donations, term);
         if (results[0]) {
           togglePlay(results[0]);
-          announce(`Playing ${results[0].title}`);
+          announce(`Playing ${results[0].title}`, true);
           e.preventDefault();
           return;
         }
