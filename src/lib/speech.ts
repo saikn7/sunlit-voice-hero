@@ -2,6 +2,11 @@
 import type { Lang } from "./i18n";
 
 import { transcribeAudio } from "./stt.functions";
+import { synthesizeSpeech } from "./tts.functions";
+
+// Remember whether Gemini TTS has hit a hard quota/auth wall this session so
+// we don't keep retrying it for every utterance.
+let geminiTtsDisabled = false;
 
 export function isSpeechSynthesisSupported(): boolean {
   return typeof window !== "undefined" && typeof Audio !== "undefined";
