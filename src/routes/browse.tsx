@@ -116,6 +116,39 @@ function BrowsePage() {
     audio.currentTime = 0;
     audio.play().catch(() => {});
     setPlayingId(d.id);
+    window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
+      detail: { msg: `Playing: ${d.title || "Untitled"}`, silent: true },
+    }));
+  }, [resolveUrl, playingId]);
+
+  // Announce when new audio is added so voice users know it's indexed
+  const prevCountRef = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    const n = donations.length;
+    if (prevCountRef.current !== null && n > prevCountRef.current) {
+      window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
+        detail: { msg: "Audio added and available for voice commands", silent: false },
+      }));
+    }
+    prevCountRef.current = n;
+  }, [donations.length]);
+
+    const audio = audioRef.current;
+    if (!audio) return;
+    // Same track: toggle pause/play
+    if (playingId === d.id) {
+      if (audio.paused) audio.play().catch(() => {});
+      else audio.pause();
+      return;
+    }
+    const url = await resolveUrl(d);
+    if (!url) return;
+    cancelSpeech();
+    audio.pause();
+    audio.src = url;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    setPlayingId(d.id);
   }, [resolveUrl, playingId]);
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
