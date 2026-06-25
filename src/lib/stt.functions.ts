@@ -37,9 +37,8 @@ export const transcribeAudio = createServerFn({ method: "POST" })
     const form = new FormData();
     form.append("model", "openai/gpt-4o-mini-transcribe");
     form.append("file", blob, `recording.${ext}`);
-    // Burmese: "my" (ISO-639-1). English: "en". Leave language hint so the
-    // model doesn't auto-detect into the wrong script.
-    form.append("language", data.lang === "my" ? "my" : "en");
+    // No `language` parameter — let the model auto-detect so Burmese (and any
+    // other language) transcribes without a 400 on unrecognized codes.
 
     const res = await fetch(
       "https://ai.gateway.lovable.dev/v1/audio/transcriptions",
