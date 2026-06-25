@@ -148,7 +148,7 @@ function BrowsePage() {
         known.add(d.id);
         added.push(d);
         // eslint-disable-next-line no-console
-        console.log(`Audio indexed for voice commands: ${d.title || "Untitled"}`);
+        console.log(`Voice index updated: ${d.title || "Untitled"}`);
       }
     }
     if (added.length > 0 && known.size > added.length) {
