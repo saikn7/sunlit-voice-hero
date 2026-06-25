@@ -87,13 +87,31 @@ export function VoiceNav() {
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
   }, [lang, navigate, respond, showSubtitle]);
 
+  const teardownRecognizer = React.useCallback(() => {
+    const r = recognizerRef.current;
+    recognizerRef.current = null;
+    if (!r) return;
+    try { r.onresult = undefined; r.onerror = undefined; r.onend = undefined; } catch {}
+    try { r.abort?.(); } catch {}
+    try { r.stop?.(); } catch {}
+  }, []);
+
+  const resetRecognition = React.useCallback(() => {
+    teardownRecognizer();
+    cancelSpeech();
+    setListening(false);
+    showHint(lang === "my" ? "မိုက်ပြန်စတင်နေသည်…" : "Resetting microphone…", 1500);
+  }, [lang, showHint, teardownRecognizer]);
+
   const start = React.useCallback(() => {
     if (!isSpeechRecognitionSupported()) {
       respond("Voice input is not supported in this browser.");
       return;
     }
-    // Continuous listening so users (especially screen-reader users) don't
-    // need to re-tap the mic for every command.
+    // Always destroy any prior session before starting a new one — prevents
+    // the "mic dies after a few uses" bug where two recognizers fight.
+    teardownRecognizer();
+
     const r = createRecognizer(lang, { continuous: true });
     if (!r) return;
     recognizerRef.current = r;
@@ -101,24 +119,46 @@ export function VoiceNav() {
     r.onerror = (err: any) => {
       if (err?.error === "not-allowed") {
         respond(lang === "my" ? "မိုက်ခွင့်ပြုပါ။" : "Please allow microphone access.");
+        teardownRecognizer();
+        setListening(false);
+        return;
       }
+      // Non-fatal: clear state so the next tap starts a fresh session.
+      teardownRecognizer();
       setListening(false);
     };
-    r.onend = () => setListening(false);
+    r.onend = () => {
+      // onend fires after stop()/abort()/silence. Always reset state so the
+      // mic button works on the next press.
+      if (recognizerRef.current === r) recognizerRef.current = null;
+      setListening(false);
+    };
     try {
       r.start();
       setListening(true);
       showHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say 'play', 'pause', 'motivation', or 'play <title>'.", 3500);
     } catch {
+      teardownRecognizer();
       setListening(false);
     }
-  }, [handle, lang, respond, showHint]);
+  }, [handle, lang, respond, showHint, teardownRecognizer]);
 
   const stop = React.useCallback(() => {
-    try { recognizerRef.current?.stop(); } catch {}
+    teardownRecognizer();
     cancelSpeech();
     setListening(false);
-  }, []);
+  }, [teardownRecognizer]);
+
+  // Expose a global reset hook so any component can recover the mic.
+  React.useEffect(() => {
+    const onReset = () => resetRecognition();
+    window.addEventListener("sv-voice-reset", onReset);
+    return () => window.removeEventListener("sv-voice-reset", onReset);
+  }, [resetRecognition]);
+
+  // Safety net: tear the recognizer down on unmount so it doesn't leak.
+  React.useEffect(() => () => { teardownRecognizer(); }, [teardownRecognizer]);
+
 
   React.useEffect(() => {
     const onFeedback = (e: Event) => {

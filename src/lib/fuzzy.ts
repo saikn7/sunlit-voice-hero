@@ -2,11 +2,21 @@
 // Combines normalized substring match + token overlap + Levenshtein on title.
 
 function normalize(s: string): string {
-  return (s ?? "")
+  // NFC keeps Burmese (Myanmar) Unicode intact while collapsing equivalent
+  // codepoint sequences so user-typed and stored text compare reliably.
+  let out = (s ?? "");
+  try { out = out.normalize("NFC"); } catch {}
+  return out
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// True when the string contains Myanmar script — used to enable
+// substring matching that doesn't rely on spaces between words.
+function hasMyanmar(s: string): boolean {
+  return /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(s);
 }
 
 // Common synonym groups so "voice donation" matches "donate voice", etc.
@@ -94,6 +104,22 @@ export function fuzzyScore<T extends Searchable>(item: T, query: string): number
     const maxLen = Math.max(title.length, q.length);
     const sim = 1 - d / Math.max(1, maxLen);
     if (sim > 0.6) score += Math.round(sim * 30);
+  }
+
+  // Burmese / non-space-delimited: do sliding-window substring match
+  // against the haystack so a partial Burmese phrase still scores.
+  if (hasMyanmar(q) || hasMyanmar(haystack)) {
+    const qNoSpace = q.replace(/\s+/g, "");
+    const hNoSpace = haystack.replace(/\s+/g, "");
+    if (qNoSpace.length >= 2 && hNoSpace.includes(qNoSpace)) score += 80;
+    // 2-char shingles for very short partial inputs
+    if (qNoSpace.length >= 2) {
+      let hits = 0;
+      for (let i = 0; i < qNoSpace.length - 1; i++) {
+        if (hNoSpace.includes(qNoSpace.slice(i, i + 2))) hits++;
+      }
+      score += Math.min(hits, 8) * 4;
+    }
   }
 
   return score;
