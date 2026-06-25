@@ -78,7 +78,7 @@ export function VoiceNav() {
     }
 
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
-  }, [lang, navigate, respond]);
+  }, [lang, navigate, respond, showSubtitle]);
 
   const start = React.useCallback(() => {
     if (!isSpeechRecognitionSupported()) {
