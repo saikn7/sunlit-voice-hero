@@ -53,6 +53,26 @@ export function speak(text: string, opts: SpeakOptions = {}) {
   cancelSpeech();
   const token = ++currentToken;
 
+  const playBrowserFallback = () => {
+    if (token !== currentToken) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      opts.onEnd?.();
+      return;
+    }
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = LANG_TAG[lang];
+      u.rate = opts.rate ?? 1;
+      u.pitch = opts.pitch ?? 1;
+      u.onstart = () => opts.onStart?.();
+      u.onend = () => opts.onEnd?.();
+      u.onerror = () => opts.onEnd?.();
+      window.speechSynthesis.speak(u);
+    } catch {
+      opts.onEnd?.();
+    }
+  };
+
   (async () => {
     try {
       const { audio, mime } = await synthesizeSpeech({ data: { text, lang } });
@@ -68,12 +88,12 @@ export function speak(text: string, opts: SpeakOptions = {}) {
       };
       a.onerror = () => {
         if (currentAudio === a) currentAudio = null;
-        opts.onEnd?.();
+        playBrowserFallback();
       };
-      await a.play().catch(() => opts.onEnd?.());
+      await a.play().catch(() => playBrowserFallback());
     } catch (e) {
-      console.error("[tts]", e);
-      opts.onEnd?.();
+      console.warn("[tts] Gemini failed, falling back to browser SpeechSynthesis", e);
+      playBrowserFallback();
     }
   })();
 }
