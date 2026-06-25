@@ -541,7 +541,18 @@ function YourDonations() {
 
   return (
     <section aria-labelledby="my-donations" className="grid gap-3">
-      <h2 id="my-donations" className="text-2xl font-bold">{t("yourDonations")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="my-donations" className="text-2xl font-bold">{t("yourDonations")}</h2>
+        {user && (
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2 text-sm">
+            <span className="font-semibold">Voice Donor Score</span>
+            <span aria-label={`${donorScore} of 5 stars`} className="text-base text-amber-500">
+              {"★".repeat(donorScore)}{"☆".repeat(5 - donorScore)}
+            </span>
+            <span className="text-muted-foreground">· {data.length} uploaded · {reportsTotal} reports</span>
+          </div>
+        )}
+      </div>
       {isLoading && <p>{t("loading")}</p>}
       {!isLoading && data.length === 0 && (
         <p className="text-muted-foreground">— —</p>
