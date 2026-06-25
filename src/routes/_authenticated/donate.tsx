@@ -563,7 +563,32 @@ function YourDonations() {
             <div className="flex flex-wrap items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-lg font-semibold">{d.title}</p>
-                {d.description && <p className="text-sm text-muted-foreground">{d.description}</p>}
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                  {d.hidden && (
+                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 font-semibold text-destructive">
+                      Hidden ({d.report_count} reports)
+                    </span>
+                  )}
+                  {!d.hidden && d.risk_flag === "under_review" && (
+                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-700 dark:text-amber-400">
+                      ⚠️ Under Review
+                    </span>
+                  )}
+                  {!d.hidden && d.risk_flag === "risky" && (
+                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 font-semibold text-destructive">
+                      ⚠️ Risky Content
+                    </span>
+                  )}
+                  {d.moderation_status === "pending" && (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
+                      Moderation pending…
+                    </span>
+                  )}
+                  {d.risk_categories && d.risk_categories.length > 0 && (
+                    <span className="text-muted-foreground">{d.risk_categories.join(", ")}</span>
+                  )}
+                </div>
+                {d.description && <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>}
                 {d.keywords?.length > 0 && (
                   <p className="text-sm text-muted-foreground">#{d.keywords.join(" #")}</p>
                 )}
