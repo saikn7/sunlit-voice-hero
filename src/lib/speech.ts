@@ -19,6 +19,51 @@ export function isSpeechRecognitionSupported(): boolean {
 
 const LANG_TAG: Record<Lang, string> = { en: "en-US", my: "my-MM" };
 
+function getVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
+  try { return window.speechSynthesis.getVoices() ?? []; } catch { return []; }
+}
+
+function pickVoice(lang: Lang): SpeechSynthesisVoice | null {
+  const voices = getVoices();
+  if (!voices.length) return null;
+  const target = LANG_TAG[lang].toLowerCase();
+  const prefix = target.split("-")[0];
+  const browserLangs = (typeof navigator !== "undefined"
+    ? [navigator.language, ...(navigator.languages ?? [])]
+    : []
+  ).map((l) => l.toLowerCase());
+
+  // 1. Exact match on target tag (e.g. my-MM)
+  let v = voices.find((x) => x.lang?.toLowerCase() === target);
+  if (v) return v;
+  // 2. Same language prefix (e.g. my-*)
+  v = voices.find((x) => x.lang?.toLowerCase().startsWith(prefix + "-") || x.lang?.toLowerCase() === prefix);
+  if (v) return v;
+  // 3. Burmese name hints
+  if (lang === "my") {
+    v = voices.find((x) => /burmese|myanmar|မြန်မာ/i.test(x.name));
+    if (v) return v;
+  }
+  // 4. Prefer voice matching the browser's preferred languages
+  for (const bl of browserLangs) {
+    v = voices.find((x) => x.lang?.toLowerCase() === bl);
+    if (v) return v;
+    const bp = bl.split("-")[0];
+    v = voices.find((x) => x.lang?.toLowerCase().startsWith(bp + "-"));
+    if (v) return v;
+  }
+  return null;
+}
+
+// Warm up the voice list (some browsers populate it asynchronously).
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  try {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => { try { window.speechSynthesis.getVoices(); } catch {} };
+  } catch {}
+}
+
 let currentAudio: HTMLAudioElement | null = null;
 let currentToken = 0;
 
@@ -64,6 +109,8 @@ export function speak(text: string, opts: SpeakOptions = {}) {
       u.lang = LANG_TAG[lang];
       u.rate = opts.rate ?? 1;
       u.pitch = opts.pitch ?? 1;
+      const voice = pickVoice(lang);
+      if (voice) u.voice = voice;
       u.onstart = () => opts.onStart?.();
       u.onend = () => opts.onEnd?.();
       u.onerror = () => opts.onEnd?.();
