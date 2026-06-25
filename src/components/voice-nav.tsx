@@ -250,15 +250,6 @@ export function VoiceNav() {
       );
       return;
     }
-    if (isIOS) {
-      showHint(
-        lang === "my"
-          ? "iOS တွင် အသံဖမ်းမှု ကန့်သတ်ထားသည်။"
-          : "Voice input limited on iOS. Use the keyboard button.",
-        4000,
-      );
-      return;
-    }
     if (listening) stop(); else start();
   };
 
@@ -280,20 +271,20 @@ export function VoiceNav() {
         type="button"
         onClick={onMicClick}
         aria-pressed={listening}
-        aria-disabled={isIOS || voiceUnsupported}
+        aria-disabled={voiceUnsupported}
         aria-label={
           voiceUnsupported
             ? "Voice not supported on this device"
-            : isIOS
-              ? "Voice input limited on iOS"
-              : listening
-                ? "Stop voice command"
+            : listening
+              ? "Stop voice command"
+              : isIOS
+                ? "Tap to retry microphone"
                 : "Start voice command (press Space)"
         }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           listening
             ? "bg-destructive text-destructive-foreground animate-pulse"
-            : isIOS || voiceUnsupported
+            : voiceUnsupported
               ? "bg-primary/60 text-primary-foreground"
               : "bg-primary text-primary-foreground"
         }`}
@@ -301,7 +292,7 @@ export function VoiceNav() {
           voiceUnsupported
             ? "Voice not supported — use keyboard"
             : isIOS
-              ? "Voice input limited on iOS"
+              ? "Tap to retry microphone"
               : "Press Space to talk"
         }
       >
