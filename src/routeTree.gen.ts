@@ -15,6 +15,7 @@ import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedListenRouteImport } from './routes/_authenticated/listen'
 import { Route as AuthenticatedDonateRouteImport } from './routes/_authenticated/donate'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedListenRoute = AuthenticatedListenRouteImport.update({
   id: '/listen',
   path: '/listen',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/donate': typeof AuthenticatedDonateRoute
   '/listen': typeof AuthenticatedListenRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/donate': typeof AuthenticatedDonateRoute
   '/listen': typeof AuthenticatedListenRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/donate': typeof AuthenticatedDonateRoute
   '/_authenticated/listen': typeof AuthenticatedListenRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/donate'
     | '/listen'
+    | '/profile'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/donate'
     | '/listen'
+    | '/profile'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/donate'
     | '/_authenticated/listen'
+    | '/_authenticated/profile'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -197,6 +209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/listen': {
       id: '/_authenticated/listen'
       path: '/listen'
@@ -231,11 +250,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDonateRoute: typeof AuthenticatedDonateRoute
   AuthenticatedListenRoute: typeof AuthenticatedListenRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDonateRoute: AuthenticatedDonateRoute,
   AuthenticatedListenRoute: AuthenticatedListenRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
