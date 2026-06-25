@@ -107,6 +107,7 @@ export type Database = {
       profiles: {
         Row: {
           accessibility_mode: boolean
+          avatar_url: string | null
           created_at: string
           display_name: string | null
           high_contrast: boolean
@@ -118,6 +119,7 @@ export type Database = {
         }
         Insert: {
           accessibility_mode?: boolean
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           high_contrast?: boolean
@@ -129,6 +131,7 @@ export type Database = {
         }
         Update: {
           accessibility_mode?: boolean
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           high_contrast?: boolean
@@ -204,6 +207,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_donor_level: { Args: { _user_id: string }; Returns: string }
       get_donor_score: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
