@@ -144,17 +144,25 @@
     text-rendering: optimizeLegibility;
   }
   :lang(my), [lang="my"] {
-    font-family: "Noto Sans Myanmar", "Myanmar Text", "Padauk", "Myanmar MN", "Inter", system-ui, sans-serif;
-    line-height: 1.55;
-    letter-spacing: 0.01em;
-    font-feature-settings: "kern" 1, "liga" 1;
-  }
-  :lang(my) h1, [lang="my"] h1,
-  :lang(my) h2, [lang="my"] h2,
-  :lang(my) h3, [lang="my"] h3 {
-    line-height: 1.35;
+    font-family: "Noto Sans Myanmar", "Padauk", "Myanmar Text", "Myanmar MN", "Inter", system-ui, sans-serif;
+    /* Burmese clusters must not break mid-syllable — that's what causes glyphs
+       to stack/overlap on the hero. Keep words intact and let the browser
+       wrap at spaces only. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-height: 1.7;
     letter-spacing: 0.005em;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
+  /* Headings need extra vertical room for stacking marks; override Tailwind's
+     leading-* utilities used on the hero (`leading-[1.08]` etc.). */
+  :lang(my) h1, [lang="my"] h1 { line-height: 1.5 !important; letter-spacing: 0 !important; }
+  :lang(my) h2, [lang="my"] h2 { line-height: 1.45 !important; letter-spacing: 0 !important; }
+  :lang(my) h3, [lang="my"] h3 { line-height: 1.4 !important; letter-spacing: 0 !important; }
+  /* Slightly trim very large Burmese headings so they don't dominate the hero. */
+  :lang(my) .text-5xl, [lang="my"] .text-5xl { font-size: 2.25rem; }
+  :lang(my) .text-6xl, [lang="my"] .text-6xl { font-size: 2.75rem; }
+  :lang(my) .text-7xl, [lang="my"] .text-7xl { font-size: 3.25rem; }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.1; }
   h1 { font-weight: 700; }
   h2 { font-weight: 700; }
