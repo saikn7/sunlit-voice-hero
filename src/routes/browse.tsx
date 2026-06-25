@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePrefs } from "@/lib/prefs-context";
@@ -66,6 +66,22 @@ function BrowsePage() {
     },
   });
 
+  // Realtime: refetch donations the moment a new one is inserted anywhere,
+  // so the voice index updates without a page refresh.
+  const qc = useQueryClient();
+  React.useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("donations-voice-index")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "donations" },
+        () => qc.invalidateQueries({ queryKey: ["donations"] }),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, qc]);
+
   const filtered = React.useMemo(() => {
     let list = donations;
     if (category !== "all") {
@@ -121,17 +137,27 @@ function BrowsePage() {
     }));
   }, [resolveUrl, playingId]);
 
-  // Announce when new audio is added so voice users know it's indexed
-  const prevCountRef = React.useRef<number | null>(null);
+  // Voice index: log every indexed item and announce additions so users
+  // know new uploads are immediately playable by voice.
+  const indexedIdsRef = React.useRef<Set<string>>(new Set());
   React.useEffect(() => {
-    const n = donations.length;
-    if (prevCountRef.current !== null && n > prevCountRef.current) {
+    const known = indexedIdsRef.current;
+    const added: Donation[] = [];
+    for (const d of donations) {
+      if (!known.has(d.id)) {
+        known.add(d.id);
+        added.push(d);
+        // eslint-disable-next-line no-console
+        console.log(`Audio indexed for voice commands: ${d.title || "Untitled"}`);
+      }
+    }
+    if (added.length > 0 && known.size > added.length) {
+      // Only announce true additions after the initial load.
       window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
-        detail: { msg: "Audio added and available for voice commands", silent: false },
+        detail: { msg: "Audio is now available for voice commands", silent: false },
       }));
     }
-    prevCountRef.current = n;
-  }, [donations.length]);
+  }, [donations]);
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {

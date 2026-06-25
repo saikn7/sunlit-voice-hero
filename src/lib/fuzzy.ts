@@ -64,6 +64,13 @@ export function fuzzyScore<T extends Searchable>(item: T, query: string): number
   let score = 0;
   if (haystack.includes(q)) score += 100;
 
+  // Space-stripped match: "lilz" matches "Lil Z music"
+  const qJoined = q.replace(/\s+/g, "");
+  const hayJoined = haystack.replace(/\s+/g, "");
+  const titleJoined = normalize(item.title).replace(/\s+/g, "");
+  if (qJoined.length >= 3 && hayJoined.includes(qJoined)) score += 60;
+  if (qJoined.length >= 3 && titleJoined.startsWith(qJoined)) score += 25;
+
   const qTokens = q.split(" ").filter(Boolean);
   const hTokens = new Set(haystack.split(" ").filter(Boolean));
   const expanded = expandSynonyms(qTokens);
