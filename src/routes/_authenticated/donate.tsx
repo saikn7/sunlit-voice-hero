@@ -1,9 +1,11 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePrefs } from "@/lib/prefs-context";
+import { moderateDonation } from "@/lib/moderation.functions";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Donation = Tables<"donations">;
