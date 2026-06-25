@@ -128,7 +128,7 @@ export function VoiceNav() {
     gotResultRef.current = false;
     let started = false;
 
-    r.onstart = () => {
+    (r as any).onstart = () => {
       started = true;
       setErrorState(false);
       setListening(true);
