@@ -97,6 +97,57 @@ function BrowsePage() {
     setPlayingId(d.id);
   }, [resolveUrl, playingId]);
 
+  // Voice command handler: play/pause/stop, "play <title>", "find <title>"
+  React.useEffect(() => {
+    const onVoice = (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
+      if (!detail) return;
+      const text = detail.text;
+      const audio = audioRef.current;
+
+      // Pause / stop
+      if (/^(pause|stop|halt|quiet|silent)$/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
+        if (audio && !audio.paused) audio.pause();
+        e.preventDefault();
+        return;
+      }
+      // Resume current
+      if (/^(resume|continue|keep playing)$/i.test(text)) {
+        if (audio && audio.paused && playingId) audio.play().catch(() => {});
+        e.preventDefault();
+        return;
+      }
+      // Plain "play" — toggle current or play first
+      if (/^play$/i.test(text)) {
+        if (audio && playingId && audio.paused) audio.play().catch(() => {});
+        else if (!playingId && filtered[0]) togglePlay(filtered[0]);
+        e.preventDefault();
+        return;
+      }
+
+      // "play <title>" / "find <title>" / "listen to <title>"
+      const m = text.match(/^(?:play|listen to|find|search|open)\s+(.+)$/i);
+      if (m) {
+        const term = m[1].trim();
+        // Category shortcut
+        const cat = CATEGORIES.find((c) => c.id !== "all" && c.id === term.toLowerCase());
+        if (cat) {
+          setCategory(cat.id);
+          e.preventDefault();
+          return;
+        }
+        const results = fuzzySearch(donations, term);
+        if (results[0]) {
+          togglePlay(results[0]);
+          e.preventDefault();
+          return;
+        }
+      }
+    };
+    window.addEventListener("sv-voice", onVoice as EventListener);
+    return () => window.removeEventListener("sv-voice", onVoice as EventListener);
+  }, [donations, filtered, playingId, togglePlay]);
+
   return (
     <div className="grid gap-6 sm:gap-8">
       <header>
