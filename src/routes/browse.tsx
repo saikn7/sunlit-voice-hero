@@ -23,14 +23,23 @@ export const Route = createFileRoute("/browse")({
   }),
 });
 
-const CATEGORIES: { id: string; key: TKey }[] = [
-  { id: "all", key: "catAll" },
-  { id: "motivation", key: "catMotivation" },
-  { id: "education", key: "catEducation" },
-  { id: "stories", key: "catStories" },
-  { id: "news", key: "catNews" },
-  { id: "prayers", key: "catPrayers" },
+const CATEGORIES: { id: string; key: TKey; match: RegExp }[] = [
+  { id: "all", key: "catAll", match: /\ball\b|everything|အားလုံး/i },
+  { id: "motivation", key: "catMotivation", match: /motivat|inspir|စိတ်ဓာတ်/i },
+  { id: "education", key: "catEducation", match: /educat|learn|lesson|study|ပညာ/i },
+  { id: "stories", key: "catStories", match: /stor(y|ies)|tale|narrat|ဇာတ်လမ်း/i },
+  { id: "news", key: "catNews", match: /news|update|headline|သတင်း/i },
+  { id: "entertainment", key: "catEntertainment", match: /entertain|music|song|fun|comedy|ဖျော်ဖြေ/i },
+  { id: "prayers", key: "catPrayers", match: /pray|worship|devotion|ဆုတောင်း/i },
+  { id: "other", key: "catOther", match: /\bother|misc|uncategor|အခြား/i },
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  all: "All", motivation: "Motivation", education: "Education", stories: "Stories",
+  news: "News", entertainment: "Entertainment", prayers: "Prayers", other: "Other",
+};
+
+const KNOWN_CAT_KEYWORDS = ["motivation", "education", "stories", "story", "news", "entertainment", "music", "prayer", "prayers", "worship"];
 
 function BrowsePage() {
   const { user } = useAuth();
