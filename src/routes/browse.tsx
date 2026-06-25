@@ -389,6 +389,7 @@ function BrowsePage() {
                   <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
                     {d.title || t("untitled")}
                   </h3>
+                  <StatusBadge donation={d} />
                   {d.description && (
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
                   )}
@@ -405,23 +406,47 @@ function BrowsePage() {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => togglePlay(d)}
-                aria-pressed={showPause}
-                className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
-                  showPause
-                    ? "bg-accent text-accent-foreground hover:opacity-95"
-                    : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
-                }`}
-              >
-                <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
-                {showPause ? t("pause") : t("play")}
-              </button>
+              <div className="mt-auto flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => togglePlay(d)}
+                  aria-pressed={showPause}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
+                    showPause
+                      ? "bg-accent text-accent-foreground hover:opacity-95"
+                      : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
+                  }`}
+                >
+                  <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
+                  {showPause ? t("pause") : t("play")}
+                </button>
+                {user && user.id !== d.user_id && (
+                  <button
+                    type="button"
+                    onClick={() => { setReportingId(d.id); setReportMsg(null); }}
+                    className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+                    aria-label="Report audio"
+                  >
+                    ⚠️ Report
+                  </button>
+                )}
+              </div>
+
+              {reportingId === d.id && (
+                <ReportPanel
+                  donationId={d.id}
+                  userId={user?.id ?? null}
+                  onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
+                />
+              )}
             </li>
           );
         })}
       </ul>
+
+      {reportMsg && (
+        <p role="status" className="rounded-2xl bg-primary/15 px-4 py-3 text-primary">{reportMsg}</p>
+      )}
 
     </div>
   );
