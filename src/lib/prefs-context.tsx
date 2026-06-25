@@ -57,46 +57,63 @@ function detectInitialTheme(): Theme {
 
 export function PrefsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [lang, setLangState] = React.useState<Lang>("en");
-  const [theme, setThemeState] = React.useState<Theme>("light");
-  const [contrast, setContrastState] = React.useState(false);
-  const [demoMode, setDemoModeState] = React.useState(false);
+  const [lang, setLangState] = React.useState<Lang>(detectInitialLang);
+  const [theme, setThemeState] = React.useState<Theme>(detectInitialTheme);
+  const [contrast, setContrastState] = React.useState<boolean>(() =>
+    typeof window !== "undefined" && window.localStorage.getItem(LS_CONTRAST) === "1",
+  );
+  const [demoMode, setDemoModeState] = React.useState<boolean>(() =>
+    typeof window !== "undefined" && window.localStorage.getItem(LS_DEMO) === "1",
+  );
 
   React.useEffect(() => {
-    const l = detectInitialLang();
-    const th = detectInitialTheme();
-    const c = window.localStorage.getItem(LS_CONTRAST) === "1";
-    const d = window.localStorage.getItem(LS_DEMO) === "1";
-    setLangState(l);
-    setThemeState(th);
-    setContrastState(c);
-    setDemoModeState(d);
-    applyTheme(th);
-    applyContrast(c);
+    applyTheme(theme);
+    applyContrast(contrast);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Hydrate from profile only ONCE per signed-in user.id. Avoids overwriting
+  // the user's local choice every time the auth token refreshes (tab focus).
+  // localStorage is the source of truth — if it has a value, push it to the
+  // profile instead of pulling.
+  const hydratedFor = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (!user) return;
+    if (!user) { hydratedFor.current = null; return; }
+    if (hydratedFor.current === user.id) return;
+    hydratedFor.current = user.id;
     let cancelled = false;
     (async () => {
+      const hasLocalLang = !!window.localStorage.getItem(LS_LANG);
+      const hasLocalTheme = !!window.localStorage.getItem(LS_THEME);
       const { data } = await supabase
         .from("profiles")
         .select("language, theme")
         .eq("id", user.id)
         .maybeSingle();
-      if (cancelled || !data) return;
-      if (data.language === "en" || data.language === "my") {
+      if (cancelled) return;
+      // Only adopt remote values when the user has no local preference yet.
+      if (!hasLocalLang && data && (data.language === "en" || data.language === "my")) {
         setLangState(data.language);
         window.localStorage.setItem(LS_LANG, data.language);
       }
-      if (data.theme === "light" || data.theme === "dark") {
+      if (!hasLocalTheme && data && (data.theme === "light" || data.theme === "dark")) {
         setThemeState(data.theme);
         applyTheme(data.theme);
         window.localStorage.setItem(LS_THEME, data.theme);
       }
+      // Sync local choice up to profile so other devices catch up.
+      const updates: { language?: Lang; theme?: Theme } = {};
+      const localLang = window.localStorage.getItem(LS_LANG) as Lang | null;
+      const localTheme = window.localStorage.getItem(LS_THEME) as Theme | null;
+      if (localLang && localLang !== data?.language) updates.language = localLang;
+      if (localTheme && localTheme !== data?.theme) updates.theme = localTheme;
+      if (Object.keys(updates).length) {
+        supabase.from("profiles").update(updates).eq("id", user.id);
+      }
     })();
     return () => { cancelled = true; };
   }, [user]);
+
 
   const setLang = React.useCallback((l: Lang) => {
     setLangState(l);
