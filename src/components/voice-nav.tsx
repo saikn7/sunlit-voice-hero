@@ -158,20 +158,19 @@ export function VoiceNav() {
     r.onend = () => {
       if (recognizerRef.current === r) recognizerRef.current = null;
       setListening(false);
-      // Auto-retry once if nothing was heard.
+      // Auto-retry once if nothing was heard. Keep mic UI active — never
+      // switch the icon on transient errors/restarts.
       if (!gotResultRef.current && !retriedRef.current) {
         retriedRef.current = true;
         showHint(lang === "my" ? "ထပ်ကြိုးစားနေသည်…" : "Retrying…", 1500);
         setTimeout(() => { try { start(); } catch {} }, 250);
       } else if (!gotResultRef.current && retriedRef.current) {
-        // Fall back to typed input
         retriedRef.current = false;
-        setTypeMode(true);
         showHint(
           lang === "my"
-            ? "အသံ မဖမ်းမိပါ။ ရိုက်ထည့်ပါ။"
-            : "Couldn't hear you. Tap to type instead.",
-          4000,
+            ? "အသံ မဖမ်းမိပါ။ ထပ်ပြောကြည့်ပါ။"
+            : "Didn't catch that. Try again or use the keyboard.",
+          3500,
         );
       }
     };
@@ -241,12 +240,21 @@ export function VoiceNav() {
   };
 
   const onMicClick = () => {
-    if (voiceUnsupported || isIOS) {
-      setTypeMode((m) => !m);
+    if (voiceUnsupported) {
+      setTypeMode(true);
       showHint(
         lang === "my"
-          ? "iOS တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
-          : "Voice not supported on iOS. Tap to type instead.",
+          ? "ဤဘရောက်ဇာတွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
+          : "Voice not supported here. Tap to type instead.",
+        4000,
+      );
+      return;
+    }
+    if (isIOS) {
+      showHint(
+        lang === "my"
+          ? "iOS တွင် အသံဖမ်းမှု ကန့်သတ်ထားသည်။"
+          : "Voice input limited on iOS. Use the keyboard button.",
         4000,
       );
       return;
@@ -256,23 +264,48 @@ export function VoiceNav() {
 
   return (
     <>
+      {/* Keyboard fallback toggle — always available alongside the mic */}
+      <button
+        type="button"
+        onClick={() => setTypeMode((m) => !m)}
+        aria-pressed={typeMode}
+        aria-label={typeMode ? "Hide keyboard input" : "Type a command"}
+        title={lang === "my" ? "ရိုက်ထည့်ရန်" : "Type a command"}
+        className="fixed bottom-5 right-24 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground border border-border shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span aria-hidden className="text-xl">⌨️</span>
+      </button>
+
       <button
         type="button"
         onClick={onMicClick}
         aria-pressed={listening}
+        aria-disabled={isIOS || voiceUnsupported}
         aria-label={
-          voiceUnsupported || isIOS
-            ? "Type a command (voice not supported on this device)"
-            : listening
-              ? "Stop voice command"
-              : "Start voice command (press Space)"
+          voiceUnsupported
+            ? "Voice not supported on this device"
+            : isIOS
+              ? "Voice input limited on iOS"
+              : listening
+                ? "Stop voice command"
+                : "Start voice command (press Space)"
         }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          listening ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-primary text-primary-foreground"
+          listening
+            ? "bg-destructive text-destructive-foreground animate-pulse"
+            : isIOS || voiceUnsupported
+              ? "bg-primary/60 text-primary-foreground"
+              : "bg-primary text-primary-foreground"
         }`}
-        title={voiceUnsupported || isIOS ? "Tap to type a command" : "Press Space to talk"}
+        title={
+          voiceUnsupported
+            ? "Voice not supported — use keyboard"
+            : isIOS
+              ? "Voice input limited on iOS"
+              : "Press Space to talk"
+        }
       >
-        <span aria-hidden className="text-2xl">{voiceUnsupported || isIOS ? "⌨️" : "🎙️"}</span>
+        <span aria-hidden className="text-2xl">🎙️</span>
       </button>
 
       {typeMode && (
