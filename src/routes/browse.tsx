@@ -220,7 +220,11 @@ function BrowsePage() {
         </button>
       </form>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Categories">
+      <div
+        className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="tablist"
+        aria-label="Categories"
+      >
         {CATEGORIES.map((c) => {
           const on = category === c.id;
           return (
@@ -230,8 +234,10 @@ function BrowsePage() {
               role="tab"
               aria-selected={on}
               onClick={() => setCategory(c.id)}
-              className={`rounded-full border px-5 py-2 text-base font-semibold transition ${
-                on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground hover:bg-secondary"
+              className={`shrink-0 rounded-full border px-5 py-2 text-base font-semibold transition-all duration-200 active:scale-95 ${
+                on
+                  ? "border-primary bg-primary/10 text-primary shadow-sm scale-[1.02]"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
               {t(c.key)}
