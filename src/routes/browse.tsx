@@ -8,8 +8,17 @@ import { fuzzySearch, rankMatches, nfc } from "@/lib/fuzzy";
 import { cancelSpeech } from "@/lib/speech";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TKey } from "@/lib/i18n";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Donation = Tables<"donations">;
+
 
 export const Route = createFileRoute("/browse")({
   component: BrowsePage,
@@ -432,21 +441,21 @@ function BrowsePage() {
                 )}
               </div>
 
-              {reportingId === d.id && (
-                <ReportPanel
-                  donationId={d.id}
-                  userId={user?.id ?? null}
-                  onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
-                />
-              )}
             </li>
           );
         })}
       </ul>
 
+      <ReportDialog
+        donationId={reportingId}
+        userId={user?.id ?? null}
+        onClose={(msg) => { setReportingId(null); if (msg) setReportMsg(msg); }}
+      />
+
       {reportMsg && (
         <p role="status" className="rounded-2xl bg-primary/15 px-4 py-3 text-primary">{reportMsg}</p>
       )}
+
 
     </div>
   );
@@ -479,28 +488,36 @@ const REPORT_REASONS: { id: string; label: string }[] = [
   { id: "spam", label: "Spam Recording" },
 ];
 
-function ReportPanel({
+function ReportDialog({
   donationId,
   userId,
   onClose,
 }: {
-  donationId: string;
+  donationId: string | null;
   userId: string | null;
   onClose: (msg?: string) => void;
 }) {
   const qc = useQueryClient();
   const [submitting, setSubmitting] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
+  const [selected, setSelected] = React.useState<{ id: string; label: string } | null>(null);
 
-  async function submit(reasonId: string, label: string) {
+  const open = donationId !== null;
+
+  React.useEffect(() => {
+    if (!open) { setSelected(null); setErr(null); setSubmitting(false); }
+  }, [open]);
+
+  async function confirmSubmit() {
+    if (!donationId || !selected) return;
     if (!userId) { setErr("Please sign in to report."); return; }
     setSubmitting(true);
     setErr(null);
     const { error } = await supabase.from("reports").insert({
       donation_id: donationId,
       reporter_id: userId,
-      reason: label,
-      category: reasonId,
+      reason: selected.label,
+      category: selected.id,
     });
     setSubmitting(false);
     if (error) {
@@ -513,29 +530,71 @@ function ReportPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-secondary/40 p-3">
-      <p className="mb-2 text-sm font-semibold">Why are you reporting this?</p>
-      <div className="grid grid-cols-2 gap-2">
-        {REPORT_REASONS.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            disabled={submitting}
-            onClick={() => submit(r.id, r.label)}
-            className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary disabled:opacity-50"
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
-      {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
-      <button
-        type="button"
-        onClick={() => onClose()}
-        className="mt-2 text-xs text-muted-foreground underline"
-      >
-        Cancel
-      </button>
-    </div>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>⚠️ Report this audio</DialogTitle>
+          <DialogDescription>
+            {selected
+              ? `Confirm reporting this audio as "${selected.label}". This will be reviewed by the community.`
+              : "Choose a reason. Reports help keep the library safe."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!selected ? (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {REPORT_REASONS.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelected(r)}
+                className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium text-left hover:bg-secondary"
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+            <strong>Reason:</strong> {selected.label}
+          </div>
+        )}
+
+        {err && <p className="text-xs text-destructive">{err}</p>}
+
+        <DialogFooter className="gap-2">
+          {selected ? (
+            <>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setSelected(null)}
+                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-secondary disabled:opacity-50"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={confirmSubmit}
+                className="rounded-xl bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground hover:opacity-95 disabled:opacity-50"
+              >
+                {submitting ? "Submitting…" : "Confirm Report"}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onClose()}
+              className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold hover:bg-secondary"
+            >
+              Cancel
+            </button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
+
+
