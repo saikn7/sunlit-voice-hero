@@ -35,6 +35,8 @@ export function VoiceNav() {
   const [typeMode, setTypeMode] = React.useState(false);
   const [typedValue, setTypedValue] = React.useState("");
   const recognizerRef = React.useRef<any>(null);
+  const retriedRef = React.useRef(false);
+  const gotResultRef = React.useRef(false);
   const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const voiceUnsupported = React.useMemo(
@@ -62,7 +64,9 @@ export function VoiceNav() {
 
   const handle = React.useCallback((raw: string) => {
     const safe = (raw || "").normalize("NFC");
-    const text = safe.trim().toLowerCase();
+    const hasMyanmar = /[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(safe);
+    // Don't lowercase Burmese — Unicode case folding can corrupt it.
+    const text = hasMyanmar ? safe.trim() : safe.trim().toLowerCase();
     if (!text) return;
     try { console.log("[voice] transcript:", safe.trim()); } catch {}
     showSubtitle(safe.trim());
@@ -131,7 +135,15 @@ export function VoiceNav() {
     const r = createRecognizer(lang, { continuous: true });
     if (!r) return;
     recognizerRef.current = r;
-    r.onresult = (e: any) => handle(e.results?.[0]?.[0]?.transcript ?? "");
+    gotResultRef.current = false;
+    r.onresult = (e: any) => {
+      const transcript = e.results?.[0]?.[0]?.transcript ?? "";
+      if (transcript.trim()) {
+        gotResultRef.current = true;
+        retriedRef.current = false;
+        handle(transcript);
+      }
+    };
     r.onerror = (err: any) => {
       if (err?.error === "not-allowed") {
         respond(lang === "my" ? "မိုက်ခွင့်ပြုပါ။" : "Please allow microphone access.");
@@ -144,10 +156,24 @@ export function VoiceNav() {
       setListening(false);
     };
     r.onend = () => {
-      // onend fires after stop()/abort()/silence. Always reset state so the
-      // mic button works on the next press.
       if (recognizerRef.current === r) recognizerRef.current = null;
       setListening(false);
+      // Auto-retry once if nothing was heard.
+      if (!gotResultRef.current && !retriedRef.current) {
+        retriedRef.current = true;
+        showHint(lang === "my" ? "ထပ်ကြိုးစားနေသည်…" : "Retrying…", 1500);
+        setTimeout(() => { try { start(); } catch {} }, 250);
+      } else if (!gotResultRef.current && retriedRef.current) {
+        // Fall back to typed input
+        retriedRef.current = false;
+        setTypeMode(true);
+        showHint(
+          lang === "my"
+            ? "အသံ မဖမ်းမိပါ။ ရိုက်ထည့်ပါ။"
+            : "Couldn't hear you. Tap to type instead.",
+          4000,
+        );
+      }
     };
     try {
       r.start();
