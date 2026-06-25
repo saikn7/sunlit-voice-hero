@@ -197,6 +197,13 @@ function BrowsePage() {
       announce(id === "all" ? "Showing all audio" : `Showing ${label}`, true);
     };
 
+    // CRITICAL: navigation/command intents must NEVER trigger audio playback.
+    // These phrases route to pages (handled by voice-nav). We bail out early
+    // and let the event bubble to the global router.
+    const NAV_INTENT_RE = /\b(donate|donation|donating|upload|add\s+voice|give\s+voice|record|contact|support|home|sign\s*in|sign\s*up|log\s*in|login|account|browse|listen)\b|လှူ|ဆက်သွယ်|ပင်မ|အိမ်/i;
+    // Explicit play-intent verbs. Bare titles WITHOUT one of these never play.
+    const PLAY_INTENT_RE = /^(?:play|listen\s+to|hear|start|resume|ဖွင့်|နားထောင်)\b/i;
+
     const onVoice = (e: Event) => {
       const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
       if (!detail) return;
@@ -205,6 +212,15 @@ function BrowsePage() {
       const text = detail.text.replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
       console.log(`[voice] Voice input: ${rawNFC}`);
       const audio = audioRef.current;
+
+      // SAFETY: navigation/command words must NEVER call playAudio().
+      // Yield to voice-nav's router — don't preventDefault, don't match.
+      if (NAV_INTENT_RE.test(rawNFC) && !PLAY_INTENT_RE.test(rawNFC)) {
+        console.log("[voice] Navigation intent detected — skipping audio match");
+        return;
+      }
+
+      announce("Processing command…", true);
 
       // Pause / stop
       if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(rawNFC)) {
@@ -238,8 +254,9 @@ function BrowsePage() {
         return;
       }
 
-      // "play/find/show <term>" — category shortcut or fuzzy title match
-      const m = rawNFC.match(/^(?:play|listen to|find|search|open|show|filter|category|ဖွင့်|ရှာ)\s+(.+)$/i);
+      // "play/find/show <term>" — category shortcut or fuzzy title match.
+      // Only EXPLICIT play/find verbs route to audio matching.
+      const m = rawNFC.match(/^(?:play|listen\s+to|find|search|ဖွင့်|ရှာ|နားထောင်)\s+(.+)$/i);
       if (m) {
         const term = m[1].trim();
         const cat = CATEGORIES.find((c) => c.id !== "all" && c.match.test(term));
@@ -258,17 +275,7 @@ function BrowsePage() {
         e.preventDefault();
         return;
       }
-
-      // Burmese / bare-title fallback: try matching the whole transcript
-      // against the live audio index (Unicode-safe, no toLowerCase needed).
-      if (rawNFC.length >= 2) {
-        const hit = playByMatch(rawNFC);
-        if (hit) {
-          announce(`Playing ${hit.title}`, true);
-          e.preventDefault();
-          return;
-        }
-      }
+      // No bare-title fallback: require explicit "play <title>" to play audio.
     };
     window.addEventListener("sv-voice", onVoice as EventListener);
     return () => window.removeEventListener("sv-voice", onVoice as EventListener);
