@@ -36,6 +36,8 @@ export function VoiceNav() {
   const [typedValue, setTypedValue] = React.useState("");
   const recognizerRef = React.useRef<any>(null);
   const retriedRef = React.useRef(false);
+  const retryCountRef = React.useRef(0);
+
   const gotResultRef = React.useRef(false);
   const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,6 +143,8 @@ export function VoiceNav() {
       if (transcript.trim()) {
         gotResultRef.current = true;
         retriedRef.current = false;
+        retryCountRef.current = 0;
+
         handle(transcript);
       }
     };
@@ -158,22 +162,30 @@ export function VoiceNav() {
     r.onend = () => {
       if (recognizerRef.current === r) recognizerRef.current = null;
       setListening(false);
-      // Auto-retry once if nothing was heard. Keep mic UI active — never
-      // switch the icon on transient errors/restarts.
-      if (!gotResultRef.current && !retriedRef.current) {
-        retriedRef.current = true;
-        showHint(lang === "my" ? "ထပ်ကြိုးစားနေသည်…" : "Retrying…", 1500);
-        setTimeout(() => { try { start(); } catch {} }, 250);
-      } else if (!gotResultRef.current && retriedRef.current) {
-        retriedRef.current = false;
+      // Auto-retry up to 3 times if nothing was heard. Keep mic UI active —
+      // NEVER switch the icon or mode on transient errors/restarts.
+      if (!gotResultRef.current && retryCountRef.current < 3) {
+        retryCountRef.current += 1;
         showHint(
           lang === "my"
-            ? "အသံ မဖမ်းမိပါ။ ထပ်ပြောကြည့်ပါ။"
-            : "Didn't catch that. Try again or use the keyboard.",
+            ? "မိုက် ယာယီ မရရှိပါ၊ ထပ်ကြိုးစားနေသည်…"
+            : "Mic temporarily unavailable, retrying…",
+          1500,
+        );
+        setTimeout(() => { try { start(); } catch {} }, 300);
+      } else if (!gotResultRef.current) {
+        retryCountRef.current = 0;
+        showHint(
+          lang === "my"
+            ? "မိုက်ကို ပြန်နှိပ်၍ ထပ်ကြိုးစားပါ။"
+            : "Tap to retry microphone.",
           3500,
         );
+      } else {
+        retryCountRef.current = 0;
       }
     };
+
     try {
       r.start();
       setListening(true);
@@ -250,15 +262,6 @@ export function VoiceNav() {
       );
       return;
     }
-    if (isIOS) {
-      showHint(
-        lang === "my"
-          ? "iOS တွင် အသံဖမ်းမှု ကန့်သတ်ထားသည်။"
-          : "Voice input limited on iOS. Use the keyboard button.",
-        4000,
-      );
-      return;
-    }
     if (listening) stop(); else start();
   };
 
@@ -280,20 +283,20 @@ export function VoiceNav() {
         type="button"
         onClick={onMicClick}
         aria-pressed={listening}
-        aria-disabled={isIOS || voiceUnsupported}
+        aria-disabled={voiceUnsupported}
         aria-label={
           voiceUnsupported
             ? "Voice not supported on this device"
-            : isIOS
-              ? "Voice input limited on iOS"
-              : listening
-                ? "Stop voice command"
+            : listening
+              ? "Stop voice command"
+              : isIOS
+                ? "Tap to retry microphone"
                 : "Start voice command (press Space)"
         }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           listening
             ? "bg-destructive text-destructive-foreground animate-pulse"
-            : isIOS || voiceUnsupported
+            : voiceUnsupported
               ? "bg-primary/60 text-primary-foreground"
               : "bg-primary text-primary-foreground"
         }`}
@@ -301,7 +304,7 @@ export function VoiceNav() {
           voiceUnsupported
             ? "Voice not supported — use keyboard"
             : isIOS
-              ? "Voice input limited on iOS"
+              ? "Tap to retry microphone"
               : "Press Space to talk"
         }
       >
