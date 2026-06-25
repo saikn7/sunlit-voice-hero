@@ -181,42 +181,57 @@ function BrowsePage() {
           )}
 
           <ul className="grid gap-4 md:grid-cols-2">
-            {filtered.map((d) => (
-              <li key={d.id} className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:shadow-elevated">
-                <div className="flex items-start gap-3">
-                  <span aria-hidden className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-xl text-primary">🎤</span>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
-                      {d.title || t("untitled")}
-                    </h3>
-                    {d.description && (
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
-                    )}
-                  </div>
-                </div>
-
-                {d.keywords && d.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {d.keywords.slice(0, 4).map((k) => (
-                      <span key={k} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-                        #{k}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => playDonation(d)}
-                  className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition ${
-                    playingId === d.id ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground hover:opacity-95"
-                  }`}
+            {filtered.map((d) => {
+              const active = playingId === d.id;
+              const showPause = active && isPlaying;
+              const hovered = hoverId === d.id;
+              return (
+                <li
+                  key={d.id}
+                  onMouseEnter={() => setHoverId(d.id)}
+                  onMouseLeave={() => setHoverId((id) => (id === d.id ? null : id))}
+                  className={`group flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border bg-card p-5 shadow-sm transition-all duration-200 ${
+                    hovered ? "-translate-y-0.5 border-primary/60 shadow-elevated" : "border-border"
+                  } ${active ? "ring-2 ring-primary/50" : ""}`}
                 >
-                  <span aria-hidden>{playingId === d.id ? "❚❚" : "▶"}</span>
-                  {playingId === d.id ? t("pause") : t("play")}
-                </button>
-              </li>
-            ))}
+                  <div className="flex items-start gap-3">
+                    <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl text-primary transition-colors ${active ? "bg-primary/30" : "bg-primary/15 group-hover:bg-primary/25"}`}>🎤</span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
+                        {d.title || t("untitled")}
+                      </h3>
+                      {d.description && (
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {d.keywords && d.keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {d.keywords.slice(0, 4).map((k) => (
+                        <span key={k} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
+                          #{k}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => togglePlay(d)}
+                    aria-pressed={showPause}
+                    className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
+                      showPause
+                        ? "bg-accent text-accent-foreground hover:opacity-95"
+                        : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
+                    }`}
+                  >
+                    <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
+                    {showPause ? t("pause") : t("play")}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </>
       )}
