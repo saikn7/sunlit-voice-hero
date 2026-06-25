@@ -137,17 +137,27 @@ function BrowsePage() {
     }));
   }, [resolveUrl, playingId]);
 
-  // Announce when new audio is added so voice users know it's indexed
-  const prevCountRef = React.useRef<number | null>(null);
+  // Voice index: log every indexed item and announce additions so users
+  // know new uploads are immediately playable by voice.
+  const indexedIdsRef = React.useRef<Set<string>>(new Set());
   React.useEffect(() => {
-    const n = donations.length;
-    if (prevCountRef.current !== null && n > prevCountRef.current) {
+    const known = indexedIdsRef.current;
+    const added: Donation[] = [];
+    for (const d of donations) {
+      if (!known.has(d.id)) {
+        known.add(d.id);
+        added.push(d);
+        // eslint-disable-next-line no-console
+        console.log(`Audio indexed for voice commands: ${d.title || "Untitled"}`);
+      }
+    }
+    if (added.length > 0 && known.size > added.length) {
+      // Only announce true additions after the initial load.
       window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
-        detail: { msg: "Audio added and available for voice commands", silent: false },
+        detail: { msg: "Audio is now available for voice commands", silent: false },
       }));
     }
-    prevCountRef.current = n;
-  }, [donations.length]);
+  }, [donations]);
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
