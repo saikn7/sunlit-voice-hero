@@ -158,20 +158,19 @@ export function VoiceNav() {
     r.onend = () => {
       if (recognizerRef.current === r) recognizerRef.current = null;
       setListening(false);
-      // Auto-retry once if nothing was heard.
+      // Auto-retry once if nothing was heard. Keep mic UI active — never
+      // switch the icon on transient errors/restarts.
       if (!gotResultRef.current && !retriedRef.current) {
         retriedRef.current = true;
         showHint(lang === "my" ? "ထပ်ကြိုးစားနေသည်…" : "Retrying…", 1500);
         setTimeout(() => { try { start(); } catch {} }, 250);
       } else if (!gotResultRef.current && retriedRef.current) {
-        // Fall back to typed input
         retriedRef.current = false;
-        setTypeMode(true);
         showHint(
           lang === "my"
-            ? "အသံ မဖမ်းမိပါ။ ရိုက်ထည့်ပါ။"
-            : "Couldn't hear you. Tap to type instead.",
-          4000,
+            ? "အသံ မဖမ်းမိပါ။ ထပ်ပြောကြည့်ပါ။"
+            : "Didn't catch that. Try again or use the keyboard.",
+          3500,
         );
       }
     };
