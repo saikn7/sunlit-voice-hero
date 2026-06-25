@@ -119,6 +119,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function AppChrome() {
   const router = useRouter();
+  const { lang } = usePrefs();
+
+  // Keep <html lang> in sync so Burmese gets the right font fallback on iOS.
+  useEffect(() => {
+    if (typeof document !== "undefined") document.documentElement.lang = lang;
+  }, [lang]);
 
   // Auth-state-driven cache invalidation (single root subscriber).
   useEffect(() => {

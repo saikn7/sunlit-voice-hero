@@ -54,8 +54,7 @@ function BrowsePage() {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const { data: donations = [], isLoading } = useQuery({
-    queryKey: ["donations", "browse", !!user],
-    enabled: !!user,
+    queryKey: ["donations", "browse"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("donations")
@@ -70,7 +69,6 @@ function BrowsePage() {
   // so the voice index updates without a page refresh.
   const qc = useQueryClient();
   React.useEffect(() => {
-    if (!user) return;
     const channel = supabase
       .channel("donations-voice-index")
       .on(
@@ -80,7 +78,7 @@ function BrowsePage() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, qc]);
+  }, [qc]);
 
   const filtered = React.useMemo(() => {
     let list = donations;
@@ -330,96 +328,93 @@ function BrowsePage() {
       </div>
 
       {!user && (
-        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-          <p className="text-xl font-semibold">{t("signInToListen")}</p>
-          <p className="mt-2 text-muted-foreground">{t("signInExplain")}</p>
-          <Link to="/auth" className="mt-6 inline-block rounded-2xl bg-primary px-6 py-3 text-lg font-bold text-primary-foreground shadow-elevated">
-            {t("signInToBrowse")}
-          </Link>
+        <div className="rounded-2xl border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
+          {t("browseSub")}{" "}
+          <Link to="/auth" className="font-semibold text-primary underline">
+            {t("signIn")}
+          </Link>{" "}
+          {t("donateYourVoice").toLowerCase()}.
         </div>
       )}
 
-      {user && (
-        <>
-          <audio
-            ref={audioRef}
-            controls
-            className="w-full"
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => { setIsPlaying(false); setPlayingId(null); }}
-          />
+      <audio
+        ref={audioRef}
+        controls
+        className="w-full"
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => { setIsPlaying(false); setPlayingId(null); }}
+      />
 
-          {isLoading && <p className="text-muted-foreground">{t("loading")}</p>}
+      {isLoading && <p className="text-muted-foreground">{t("loading")}</p>}
 
-          {!isLoading && filtered.length === 0 && (
-            <div className="rounded-3xl border border-dashed border-border bg-card/60 p-10 text-center">
-              <p className="text-lg font-semibold">{t("noResults")}</p>
-              <p className="mt-2 text-muted-foreground">
-                {t("tryAnotherOr")}{" "}
-                <Link to="/donate" className="text-primary underline">
-                  {t("donateYourVoice")}
-                </Link>
-                .
-              </p>
-            </div>
-          )}
-
-          <ul className="grid gap-4 md:grid-cols-2">
-            {filtered.map((d) => {
-              const active = playingId === d.id;
-              const showPause = active && isPlaying;
-              const hovered = hoverId === d.id;
-              return (
-                <li
-                  key={d.id}
-                  onMouseEnter={() => setHoverId(d.id)}
-                  onMouseLeave={() => setHoverId((id) => (id === d.id ? null : id))}
-                  className={`group flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border bg-card p-5 shadow-sm transition-all duration-200 ${
-                    hovered ? "-translate-y-0.5 border-primary/60 shadow-elevated" : "border-border"
-                  } ${active ? "ring-2 ring-primary/50" : ""}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl text-primary transition-colors ${active ? "bg-primary/30" : "bg-primary/15 group-hover:bg-primary/25"}`}>🎤</span>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
-                        {d.title || t("untitled")}
-                      </h3>
-                      {d.description && (
-                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {d.keywords && d.keywords.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {d.keywords.slice(0, 4).map((k) => (
-                        <span key={k} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-                          #{k}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => togglePlay(d)}
-                    aria-pressed={showPause}
-                    className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
-                      showPause
-                        ? "bg-accent text-accent-foreground hover:opacity-95"
-                        : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
-                    }`}
-                  >
-                    <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
-                    {showPause ? t("pause") : t("play")}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </>
+      {!isLoading && filtered.length === 0 && (
+        <div className="rounded-3xl border border-dashed border-border bg-card/60 p-10 text-center">
+          <p className="text-lg font-semibold">{t("noResults")}</p>
+          <p className="mt-2 text-muted-foreground">
+            {t("tryAnotherOr")}{" "}
+            <Link to="/donate" className="text-primary underline">
+              {t("donateYourVoice")}
+            </Link>
+            .
+          </p>
+        </div>
       )}
+
+      <ul className="grid gap-4 md:grid-cols-2">
+        {filtered.map((d) => {
+          const active = playingId === d.id;
+          const showPause = active && isPlaying;
+          const hovered = hoverId === d.id;
+          return (
+            <li
+              key={d.id}
+              onMouseEnter={() => setHoverId(d.id)}
+              onMouseLeave={() => setHoverId((id) => (id === d.id ? null : id))}
+              className={`group flex min-w-0 flex-col gap-3 overflow-hidden rounded-3xl border bg-card p-5 shadow-sm transition-all duration-200 ${
+                hovered ? "-translate-y-0.5 border-primary/60 shadow-elevated" : "border-border"
+              } ${active ? "ring-2 ring-primary/50" : ""}`}
+            >
+              <div className="flex items-start gap-3">
+                <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl text-primary transition-colors ${active ? "bg-primary/30" : "bg-primary/15 group-hover:bg-primary/25"}`}>🎤</span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-xl" style={{ fontFamily: "var(--font-display)" }}>
+                    {d.title || t("untitled")}
+                  </h3>
+                  {d.description && (
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{d.description}</p>
+                  )}
+                </div>
+              </div>
+
+              {d.keywords && d.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {d.keywords.slice(0, 4).map((k) => (
+                    <span key={k} className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
+                      #{k}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => togglePlay(d)}
+                aria-pressed={showPause}
+                className={`mt-auto inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all duration-150 active:scale-[0.98] ${
+                  showPause
+                    ? "bg-accent text-accent-foreground hover:opacity-95"
+                    : "bg-primary text-primary-foreground hover:opacity-95 hover:shadow-elevated"
+                }`}
+              >
+                <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
+                {showPause ? t("pause") : t("play")}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
     </div>
   );
 }
