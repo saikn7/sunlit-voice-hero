@@ -122,12 +122,14 @@ export function VoiceNav() {
 
   React.useEffect(() => {
     const onFeedback = (e: Event) => {
-      const msg = (e as CustomEvent<{ msg: string }>).detail?.msg;
-      if (msg) respond(msg);
+      const detail = (e as CustomEvent<{ msg: string; silent?: boolean }>).detail;
+      if (!detail?.msg) return;
+      showHint(detail.msg);
+      if (!detail.silent) speak(detail.msg, { lang });
     };
     window.addEventListener("sv-voice-feedback", onFeedback as EventListener);
     return () => window.removeEventListener("sv-voice-feedback", onFeedback as EventListener);
-  }, [respond]);
+  }, [lang, showHint]);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

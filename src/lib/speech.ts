@@ -197,35 +197,70 @@ function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiR
   const sr = new Impl();
   sr.lang = LANG_TAG[lang];
   sr.continuous = !!opts.continuous;
-  sr.interimResults = false;
+  // Interim results let us fire commands as soon as the phrase stabilises,
+  // ~300ms ahead of the browser's end-of-speech detection.
+  sr.interimResults = true;
   sr.maxAlternatives = 1;
+
+  let lastEmitted = "";
+  let interimText = "";
+  let interimTimer: ReturnType<typeof setTimeout> | null = null;
+  const INTERIM_COMMIT_MS = 280;
+
+  const clearInterim = () => {
+    if (interimTimer) { clearTimeout(interimTimer); interimTimer = null; }
+    interimText = "";
+  };
 
   const rec: GeminiRecognizer = {
     lang: LANG_TAG[lang],
     start() {
       stopped = false;
       aborted = false;
+      lastEmitted = "";
+      clearInterim();
       try { sr.start(); } catch { /* already started */ }
     },
     stop() {
       stopped = true;
+      clearInterim();
       try { sr.stop(); } catch {}
     },
     abort() {
       aborted = true;
       stopped = true;
+      clearInterim();
       try { sr.abort(); } catch {}
     },
   };
 
+  const emit = (t: string) => {
+    const text = t.trim();
+    if (!text || text === lastEmitted) return;
+    lastEmitted = text;
+    rec.onresult?.({ results: [[{ transcript: text }]] });
+  };
+
   sr.onresult = (e: any) => {
     if (aborted) return;
-    // Emit only finalized results.
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
+      const t = r[0]?.transcript ?? "";
       if (r.isFinal) {
-        const t = r[0]?.transcript ?? "";
-        if (t.trim()) rec.onresult?.({ results: [[{ transcript: t }]] });
+        clearInterim();
+        emit(t);
+        if (opts.continuous) { try { sr.stop(); } catch {} }
+      } else if (t && t !== interimText) {
+        interimText = t;
+        if (interimTimer) clearTimeout(interimTimer);
+        interimTimer = setTimeout(() => {
+          const pending = interimText;
+          clearInterim();
+          if (pending) {
+            emit(pending);
+            try { sr.stop(); } catch {}
+          }
+        }, INTERIM_COMMIT_MS);
       }
     }
   };
@@ -234,7 +269,8 @@ function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiR
     rec.onerror?.({ error: e?.error || "audio-capture", message: e?.message });
   };
   sr.onend = () => {
-    // Auto-restart in continuous mode unless user stopped.
+    clearInterim();
+    lastEmitted = "";
     if (opts.continuous && !stopped && !aborted) {
       try { sr.start(); return; } catch {}
     }

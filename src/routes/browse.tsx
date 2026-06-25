@@ -23,14 +23,23 @@ export const Route = createFileRoute("/browse")({
   }),
 });
 
-const CATEGORIES: { id: string; key: TKey }[] = [
-  { id: "all", key: "catAll" },
-  { id: "motivation", key: "catMotivation" },
-  { id: "education", key: "catEducation" },
-  { id: "stories", key: "catStories" },
-  { id: "news", key: "catNews" },
-  { id: "prayers", key: "catPrayers" },
+const CATEGORIES: { id: string; key: TKey; match: RegExp }[] = [
+  { id: "all", key: "catAll", match: /\ball\b|everything|အားလုံး/i },
+  { id: "motivation", key: "catMotivation", match: /motivat|inspir|စိတ်ဓာတ်/i },
+  { id: "education", key: "catEducation", match: /educat|learn|lesson|study|ပညာ/i },
+  { id: "stories", key: "catStories", match: /stor(y|ies)|tale|narrat|ဇာတ်လမ်း/i },
+  { id: "news", key: "catNews", match: /news|update|headline|သတင်း/i },
+  { id: "entertainment", key: "catEntertainment", match: /entertain|music|song|fun|comedy|ဖျော်ဖြေ/i },
+  { id: "prayers", key: "catPrayers", match: /pray|worship|devotion|ဆုတောင်း/i },
+  { id: "other", key: "catOther", match: /\bother|misc|uncategor|အခြား/i },
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  all: "All", motivation: "Motivation", education: "Education", stories: "Stories",
+  news: "News", entertainment: "Entertainment", prayers: "Prayers", other: "Other",
+};
+
+const KNOWN_CAT_KEYWORDS = ["motivation", "education", "stories", "story", "news", "entertainment", "music", "prayer", "prayers", "worship"];
 
 function BrowsePage() {
   const { user } = useAuth();
@@ -60,9 +69,21 @@ function BrowsePage() {
   const filtered = React.useMemo(() => {
     let list = donations;
     if (category !== "all") {
-      list = list.filter((d) =>
-        (d.keywords ?? []).some((k) => k.toLowerCase().includes(category)),
-      );
+      const cat = CATEGORIES.find((c) => c.id === category);
+      if (category === "other") {
+        // "Other" = no recognised category keyword in keywords/title/description
+        list = list.filter((d) => {
+          const hay = [...(d.keywords ?? []), d.title ?? "", d.description ?? ""]
+            .join(" ").toLowerCase();
+          return !KNOWN_CAT_KEYWORDS.some((k) => hay.includes(k));
+        });
+      } else if (cat) {
+        list = list.filter((d) => {
+          const hay = [...(d.keywords ?? []), d.title ?? "", d.description ?? ""]
+            .join(" ");
+          return cat.match.test(hay);
+        });
+      }
     }
     if (query.trim()) list = fuzzySearch(list, query);
     return list;
@@ -99,10 +120,15 @@ function BrowsePage() {
 
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
-    const announce = (msg: string) => {
-      window.dispatchEvent(new CustomEvent("sv-voice-feedback", { detail: { msg } }));
+    const announce = (msg: string, silent = false) => {
+      window.dispatchEvent(new CustomEvent("sv-voice-feedback", { detail: { msg, silent } }));
     };
-    const catIds = CATEGORIES.map((c) => c.id);
+
+    const applyCategory = (id: string) => {
+      setCategory(id);
+      const label = CATEGORY_LABELS[id] ?? id;
+      announce(id === "all" ? "Showing all audio" : `Showing ${label}`, true);
+    };
 
     const onVoice = (e: Event) => {
       const detail = (e as CustomEvent<{ text: string; raw: string }>).detail;
@@ -111,16 +137,16 @@ function BrowsePage() {
       const audio = audioRef.current;
 
       // Pause / stop
-      if (/^(pause|stop|halt|quiet|silent|mute)$/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
+      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
         if (audio && !audio.paused) audio.pause();
-        announce("Paused");
+        announce("Paused", true);
         e.preventDefault();
         return;
       }
       // Resume current
-      if (/^(resume|continue|keep playing|unpause)$/i.test(text)) {
+      if (/\b(resume|continue|keep playing|unpause)\b/i.test(text)) {
         if (audio && audio.paused && playingId) audio.play().catch(() => {});
-        announce("Resuming");
+        announce("Resuming", true);
         e.preventDefault();
         return;
       }
@@ -128,39 +154,33 @@ function BrowsePage() {
       if (/^play$/i.test(text)) {
         if (audio && playingId && audio.paused) audio.play().catch(() => {});
         else if (!playingId && filtered[0]) togglePlay(filtered[0]);
-        announce("Playing");
+        announce("Playing", true);
         e.preventDefault();
         return;
       }
 
-      // Category by bare name: "all", "motivation", "education", "stories", "news", "prayers"
-      const bareCat = catIds.find((id) => new RegExp(`\\b${id}\\b`, "i").test(text));
-      if (bareCat && /^(all|motivation|education|stor(?:y|ies)|news|prayers?)$/i.test(text)) {
-        const norm = bareCat === "stories" ? "stories" : bareCat;
-        setCategory(norm);
-        announce(norm === "all" ? "Showing all audio" : `Filtering ${norm}`);
+      // Category by bare name or short phrase
+      const bareCat = CATEGORIES.find((c) => c.match.test(text));
+      if (bareCat && text.split(" ").length <= 3) {
+        applyCategory(bareCat.id);
         e.preventDefault();
         return;
       }
 
       // "play/find/show <term>" — category shortcut or fuzzy title match
-      const m = text.match(/^(?:play|listen to|find|search|open|show|filter)\s+(.+)$/i);
+      const m = text.match(/^(?:play|listen to|find|search|open|show|filter|category)\s+(.+)$/i);
       if (m) {
         const term = m[1].trim();
-        const termLower = term.toLowerCase();
-        const cat = CATEGORIES.find(
-          (c) => c.id !== "all" && (c.id === termLower || termLower.includes(c.id) || c.id.includes(termLower)),
-        );
+        const cat = CATEGORIES.find((c) => c.id !== "all" && c.match.test(term));
         if (cat) {
-          setCategory(cat.id);
-          announce(`Filtering ${cat.id}`);
+          applyCategory(cat.id);
           e.preventDefault();
           return;
         }
         const results = fuzzySearch(donations, term);
         if (results[0]) {
           togglePlay(results[0]);
-          announce(`Playing ${results[0].title}`);
+          announce(`Playing ${results[0].title}`, true);
           e.preventDefault();
           return;
         }
@@ -200,7 +220,11 @@ function BrowsePage() {
         </button>
       </form>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Categories">
+      <div
+        className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="tablist"
+        aria-label="Categories"
+      >
         {CATEGORIES.map((c) => {
           const on = category === c.id;
           return (
@@ -210,8 +234,10 @@ function BrowsePage() {
               role="tab"
               aria-selected={on}
               onClick={() => setCategory(c.id)}
-              className={`rounded-full border px-5 py-2 text-base font-semibold transition ${
-                on ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground hover:bg-secondary"
+              className={`shrink-0 rounded-full border px-5 py-2 text-base font-semibold transition-all duration-200 active:scale-95 ${
+                on
+                  ? "border-primary bg-primary/10 text-primary shadow-sm scale-[1.02]"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
               }`}
             >
               {t(c.key)}
