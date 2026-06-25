@@ -70,7 +70,15 @@ export const synthesizeSpeech = createServerFn({ method: "POST" })
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: data.text }] }],
+        contents: [
+          {
+            parts: [
+              {
+                text: `Read aloud the following text exactly as written, without adding any commentary or extra words:\n\n${data.text}`,
+              },
+            ],
+          },
+        ],
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
