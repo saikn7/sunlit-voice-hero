@@ -18,7 +18,8 @@ type PrefsCtx = {
 };
 
 const Ctx = React.createContext<PrefsCtx | null>(null);
-const LS_LANG = "sv_lang";
+const LS_LANG = "language";
+const LS_LANG_LEGACY = "sv_lang";
 const LS_THEME = "theme";
 const LS_CONTRAST = "sv_contrast";
 const LS_DEMO = "sv_demo";
