@@ -205,25 +205,80 @@ export function VoiceNav() {
     return () => window.removeEventListener("keydown", onKey);
   }, [listening, start, stop]);
 
+  const submitTyped = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const v = typedValue.trim();
+    if (!v) return;
+    setTypedValue("");
+    setTypeMode(false);
+    handle(v);
+  };
+
+  const onMicClick = () => {
+    if (voiceUnsupported || isIOS) {
+      setTypeMode((m) => !m);
+      showHint(
+        lang === "my"
+          ? "iOS တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
+          : "Voice not supported on iOS. Tap to type instead.",
+        4000,
+      );
+      return;
+    }
+    if (listening) stop(); else start();
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={listening ? stop : start}
+        onClick={onMicClick}
         aria-pressed={listening}
-        aria-label={listening ? "Stop voice command" : "Start voice command (press Space)"}
+        aria-label={
+          voiceUnsupported || isIOS
+            ? "Type a command (voice not supported on this device)"
+            : listening
+              ? "Stop voice command"
+              : "Start voice command (press Space)"
+        }
         className={`fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-elevated transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           listening ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-primary text-primary-foreground"
         }`}
-        title="Press Space to talk"
+        title={voiceUnsupported || isIOS ? "Tap to type a command" : "Press Space to talk"}
       >
-        <span aria-hidden className="text-2xl">🎙️</span>
+        <span aria-hidden className="text-2xl">{voiceUnsupported || isIOS ? "⌨️" : "🎙️"}</span>
       </button>
+
+      {typeMode && (
+        <form
+          onSubmit={submitTyped}
+          className="fixed bottom-24 right-5 z-50 flex max-w-[92vw] items-center gap-2 rounded-2xl border border-border bg-card/95 p-2 shadow-elevated"
+          role="search"
+        >
+          <input
+            autoFocus
+            type="text"
+            inputMode="text"
+            value={typedValue}
+            onChange={(e) => setTypedValue(e.target.value)}
+            placeholder={lang === "my" ? "ဥပမာ - ဖွင့် မော်တီဗေးရှင်း" : "e.g. play motivation"}
+            aria-label="Type a command"
+            className="w-64 max-w-[70vw] rounded-xl border border-border bg-input px-3 py-2 text-base"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-primary px-3 py-2 text-sm font-bold text-primary-foreground"
+          >
+            {lang === "my" ? "သွား" : "Go"}
+          </button>
+        </form>
+      )}
+
       <div
         role="status"
         aria-live="polite"
         className={`fixed bottom-24 right-5 z-50 max-w-xs rounded-lg bg-card/95 px-4 py-2 text-sm shadow-elevated border border-border transition ${
-          hint ? "opacity-100" : "opacity-0 pointer-events-none"
+          hint && !typeMode ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
         {hint}
