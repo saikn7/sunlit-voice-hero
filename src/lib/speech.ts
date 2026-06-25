@@ -1,6 +1,6 @@
 // Gemini-powered TTS + STT (Burmese-friendly), with browser SpeechRecognition fallback for compatibility.
 import type { Lang } from "./i18n";
-import { synthesizeSpeech } from "./tts.functions";
+
 import { transcribeAudio } from "./stt.functions";
 
 export function isSpeechSynthesisSupported(): boolean {
