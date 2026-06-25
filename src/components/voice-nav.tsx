@@ -49,7 +49,7 @@ export function VoiceNav() {
   const handle = React.useCallback((raw: string) => {
     const text = (raw || "").trim().toLowerCase();
     if (!text) return;
-    setHint(`You said: ${text}`);
+    showSubtitle(raw.trim());
 
     // Try to find an action verb + destination
     for (const { re, dest } of ROUTES) {
