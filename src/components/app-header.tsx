@@ -24,8 +24,13 @@ export function AppHeader(_props: { onOpenContact?: () => void }) {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-        <Link to="/" className="flex items-center gap-2.5 text-xl font-bold">
-          <span aria-hidden className="grid h-9 w-9 place-items-center rounded-full bg-primary text-lg text-primary-foreground">🎤</span>
+        <Link to="/" className="flex items-center gap-2.5 text-xl font-bold" aria-label={`${t("appName")} — home`}>
+          <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-elevated">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" />
+            </svg>
+          </span>
           <span style={{ fontFamily: "var(--font-display)" }}>{t("appName")}</span>
         </Link>
 
