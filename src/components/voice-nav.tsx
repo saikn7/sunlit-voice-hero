@@ -245,12 +245,21 @@ export function VoiceNav() {
   };
 
   const onMicClick = () => {
-    if (voiceUnsupported || isIOS) {
+    if (isIOS) {
+      showHint(
+        lang === "my"
+          ? "iOS တွင် အသံ feature မပံ့ပိုးသေးပါ။"
+          : "Voice not supported on iOS yet.",
+        4000,
+      );
+      return;
+    }
+    if (voiceUnsupported) {
       setTypeMode((m) => !m);
       showHint(
         lang === "my"
-          ? "iOS တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
-          : "Voice not supported on iOS. Tap to type instead.",
+          ? "ဤ browser တွင် အသံ မရရှိနိုင်ပါ။ ရိုက်ထည့်ပါ။"
+          : "Voice not supported in this browser. Tap to type instead.",
         4000,
       );
       return;
