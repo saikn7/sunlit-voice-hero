@@ -47,9 +47,11 @@ export function VoiceNav() {
   }, [lang, showHint]);
 
   const handle = React.useCallback((raw: string) => {
-    const text = (raw || "").trim().toLowerCase();
+    const safe = (raw || "").normalize("NFC");
+    const text = safe.trim().toLowerCase();
     if (!text) return;
-    showSubtitle(raw.trim());
+    try { console.log("[voice] transcript:", safe.trim()); } catch {}
+    showSubtitle(safe.trim());
 
     // Let pages intercept (e.g. browse handles play/pause/play <title>)
     if (typeof window !== "undefined") {
