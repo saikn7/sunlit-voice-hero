@@ -35,6 +35,8 @@ export function VoiceNav() {
   const [typeMode, setTypeMode] = React.useState(false);
   const [typedValue, setTypedValue] = React.useState("");
   const recognizerRef = React.useRef<any>(null);
+  const retriedRef = React.useRef(false);
+  const gotResultRef = React.useRef(false);
   const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const voiceUnsupported = React.useMemo(
