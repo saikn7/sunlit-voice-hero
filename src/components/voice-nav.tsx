@@ -51,6 +51,13 @@ export function VoiceNav() {
     if (!text) return;
     showSubtitle(raw.trim());
 
+    // Let pages intercept (e.g. browse handles play/pause/play <title>)
+    if (typeof window !== "undefined") {
+      const ev = new CustomEvent("sv-voice", { detail: { text, raw: raw.trim() }, cancelable: true });
+      const proceed = window.dispatchEvent(ev);
+      if (!proceed) return; // page handled it
+    }
+
     // Try to find an action verb + destination
     for (const { re, dest } of ROUTES) {
       if (re.test(text)) {
@@ -62,9 +69,9 @@ export function VoiceNav() {
 
     // Try clicking a button/link by accessible name
     if (typeof document !== "undefined") {
-      const stripped = text.replace(/^(click|press|open|go to|tap|select)\s+/i, "").trim();
+      const stripped = text.replace(/^(click|press|open|go to|tap|select|find|show|switch to|filter|category)\s+/i, "").trim();
       const candidates = Array.from(
-        document.querySelectorAll<HTMLElement>("a, button, [role='button'], [role='link']"),
+        document.querySelectorAll<HTMLElement>("a, button, [role='button'], [role='link'], [role='tab']"),
       );
       const match = candidates.find((el) => {
         const label = (el.getAttribute("aria-label") || el.innerText || "").trim().toLowerCase();
