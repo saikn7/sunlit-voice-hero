@@ -350,6 +350,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
       if (stopped) return;
       stopped = true;
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      stopVad();
       try {
         if (recorder && recorder.state !== "inactive") recorder.stop();
         else rec.onend?.();
