@@ -38,90 +38,90 @@ function HomePage() {
 
   return (
     <div className="-mx-4 -my-6">
-      <section className="px-4 py-12 md:py-20" style={{ background: "var(--gradient-hero)" }}>
+      <section className="px-4 py-14 md:py-24" style={{ background: "var(--gradient-hero)" }}>
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
-            <span className="inline-block rounded-full bg-card/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-sm">
+            <span className="inline-block rounded-full bg-card/80 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground shadow-sm">
               {t("heroBadge")}
             </span>
-            <h1 className="mt-6 text-balance text-5xl leading-[1.05] tracking-tight md:text-7xl" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="mt-5 text-balance text-4xl leading-[1.08] tracking-tight md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
               {t("heroHeadline")}
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-foreground/80 md:text-xl">{t("heroSubtext")}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => go("/donate")} className="inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-lg font-bold text-primary-foreground shadow-elevated transition hover:opacity-95">
+            <p className="mt-5 max-w-xl text-base font-normal text-foreground/75 md:text-lg">{t("heroSubtext")}</p>
+            <div className="mt-7 flex flex-wrap items-center gap-2.5">
+              <button type="button" onClick={() => go("/donate")} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-elevated transition hover:opacity-95 md:text-base">
                 <span aria-hidden>♥</span> {t("donateYourVoice")}
               </button>
-              <button type="button" onClick={() => go("/listen")} className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-6 py-3.5 text-lg font-bold text-foreground hover:bg-secondary">
+              <button type="button" onClick={() => go("/listen")} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary md:text-base">
                 <span aria-hidden>🎙</span> {t("startListening")}
               </button>
-              <Link to="/listen" className="inline-flex items-center gap-2 rounded-2xl px-3 py-3.5 text-lg font-semibold text-foreground/80 underline-offset-4 hover:underline">
+              <Link to="/listen" className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-sm font-medium text-foreground/75 underline-offset-4 hover:underline md:text-base">
                 <span aria-hidden>▶</span> {t("heroBrowseAudio")}
               </Link>
             </div>
           </div>
 
-          <aside className="rounded-3xl bg-card p-6 shadow-elevated md:p-8" aria-label="Voice command examples">
+          <aside className="rounded-3xl bg-card p-6 shadow-elevated md:p-7" aria-label="Voice command examples">
             <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-2xl text-primary-foreground" aria-hidden>🎤</span>
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-xl text-primary-foreground" aria-hidden>🎤</span>
               <div>
-                <p className="text-sm font-semibold text-muted-foreground">{t("trySaying")}</p>
-                <p className="text-xl font-bold" style={{ fontFamily: "var(--font-display)" }}>{t("tryExample")}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("trySaying")}</p>
+                <p className="text-lg font-bold" style={{ fontFamily: "var(--font-display)" }}>{t("tryExample")}</p>
               </div>
             </div>
-            <ul className="mt-6 space-y-2 text-lg">
+            <ul className="mt-5 space-y-1.5 text-base">
               <li>{t("tryItem1")}</li>
               <li>{t("tryItem2")}</li>
               <li>{t("tryItem3")}</li>
               <li>{t("tryItem4")}</li>
             </ul>
-            <p className="mt-6 text-sm text-muted-foreground">{t("tryHint")}</p>
+            <p className="mt-5 text-xs text-muted-foreground">{t("tryHint")}</p>
           </aside>
         </div>
       </section>
 
-      <section className="bg-background px-4 py-16 md:py-24">
+      <section className="bg-background px-4 py-20 md:py-28">
         <div className="mx-auto max-w-6xl">
-          <h2 className="text-balance text-4xl md:text-5xl" style={{ fontFamily: "var(--font-display)" }}>{t("featuresHeadline")}</h2>
-          <p className="mt-3 text-lg text-muted-foreground">{t("featuresSub")}</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="text-balance text-3xl md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>{t("featuresHeadline")}</h2>
+          <p className="mt-2.5 text-base font-normal text-muted-foreground">{t("featuresSub")}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
-              <article key={f.t} className="rounded-3xl border border-border bg-card p-6 transition hover:shadow-elevated">
-                <span aria-hidden className="text-3xl">{f.icon}</span>
-                <h3 className="mt-4 text-2xl" style={{ fontFamily: "var(--font-display)" }}>{f.t}</h3>
-                <p className="mt-2 text-base text-muted-foreground">{f.d}</p>
+              <article key={f.t} className="rounded-2xl border border-border bg-card p-7 transition hover:shadow-elevated hover:-translate-y-0.5">
+                <span aria-hidden className="text-2xl">{f.icon}</span>
+                <h3 className="mt-4 text-xl" style={{ fontFamily: "var(--font-display)" }}>{f.t}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{f.d}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-4 py-16 md:py-24" style={{ background: "var(--gradient-hero)" }}>
+      <section className="px-4 py-20 md:py-28" style={{ background: "var(--gradient-hero)" }}>
         <div className="mx-auto max-w-6xl">
-          <h2 className="text-4xl md:text-5xl" style={{ fontFamily: "var(--font-display)" }}>{t("howHeadline")}</h2>
-          <ol className="mt-10 grid gap-5 md:grid-cols-3">
+          <h2 className="text-3xl md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>{t("howHeadline")}</h2>
+          <ol className="mt-10 grid gap-4 md:grid-cols-3">
             {steps.map((s) => (
-              <li key={s.n} className="rounded-3xl bg-card p-7 shadow-elevated">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground" aria-hidden>{s.n}</span>
-                <h3 className="mt-5 text-2xl" style={{ fontFamily: "var(--font-display)" }}>{s.t}</h3>
-                <p className="mt-2 text-base text-muted-foreground">{s.d}</p>
+              <li key={s.n} className="rounded-2xl bg-card p-7 shadow-elevated">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-lg font-bold text-primary-foreground" aria-hidden>{s.n}</span>
+                <h3 className="mt-5 text-xl" style={{ fontFamily: "var(--font-display)" }}>{s.t}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      <section className="bg-background px-4 py-16 md:py-24">
+      <section className="bg-background px-4 py-20 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
-          <blockquote className="text-balance text-3xl leading-snug md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
+          <blockquote className="text-balance text-2xl leading-snug md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
             {t("quote")}
           </blockquote>
-          <p className="mt-4 text-base text-muted-foreground">{t("quoteWho")}</p>
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={() => go("/donate")} className="rounded-2xl bg-primary px-6 py-3.5 text-lg font-bold text-primary-foreground shadow-elevated hover:opacity-95">
+          <p className="mt-3 text-sm text-muted-foreground">{t("quoteWho")}</p>
+          <div className="mt-10 flex flex-wrap justify-center gap-2.5">
+            <button type="button" onClick={() => go("/donate")} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-elevated hover:opacity-95 md:text-base">
               {t("becomeDonor")}
             </button>
-            <Link to="/contact" className="rounded-2xl border border-border bg-card px-6 py-3.5 text-lg font-bold text-foreground hover:bg-secondary">
+            <Link to="/contact" className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary md:text-base">
               {t("contactUs")}
             </Link>
           </div>
