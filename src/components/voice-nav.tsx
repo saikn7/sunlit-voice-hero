@@ -143,6 +143,8 @@ export function VoiceNav() {
       if (transcript.trim()) {
         gotResultRef.current = true;
         retriedRef.current = false;
+        retryCountRef.current = 0;
+
         handle(transcript);
       }
     };
