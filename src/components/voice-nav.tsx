@@ -144,10 +144,21 @@ export function VoiceNav() {
   }, [handle, lang, respond, showHint, teardownRecognizer]);
 
   const stop = React.useCallback(() => {
-    try { recognizerRef.current?.stop(); } catch {}
+    teardownRecognizer();
     cancelSpeech();
     setListening(false);
-  }, []);
+  }, [teardownRecognizer]);
+
+  // Expose a global reset hook so any component can recover the mic.
+  React.useEffect(() => {
+    const onReset = () => resetRecognition();
+    window.addEventListener("sv-voice-reset", onReset);
+    return () => window.removeEventListener("sv-voice-reset", onReset);
+  }, [resetRecognition]);
+
+  // Safety net: tear the recognizer down on unmount so it doesn't leak.
+  React.useEffect(() => () => { teardownRecognizer(); }, [teardownRecognizer]);
+
 
   React.useEffect(() => {
     const onFeedback = (e: Event) => {
