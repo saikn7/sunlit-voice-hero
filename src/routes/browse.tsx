@@ -87,9 +87,9 @@ function BrowsePage() {
   }, [resolveUrl]);
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-6 sm:gap-8">
       <header>
-        <h1 className="text-5xl md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
+        <h1 className="text-3xl sm:text-5xl md:text-6xl break-words" style={{ fontFamily: "var(--font-display)" }}>
           {t("audioLibrary")}
         </h1>
         <p className="mt-3 text-lg text-muted-foreground">{t("browseSub")}</p>
