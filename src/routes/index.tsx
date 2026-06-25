@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { usePrefs } from "@/lib/prefs-context";
 import { useAuth } from "@/lib/auth-context";
+import heroBg from "@/assets/hero-bg.jpg";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -38,7 +39,7 @@ function HomePage() {
 
   return (
     <div className="-mx-4 -my-6">
-      <section className="px-4 py-10 md:py-16" style={{ background: "var(--gradient-hero)" }}>
+      <section className="relative overflow-hidden bg-cover bg-center px-4 py-10 md:py-16" style={{ backgroundImage: `linear-gradient(135deg, oklch(0.12 0.04 145 / 0.55) 0%, oklch(0.08 0.03 145 / 0.35) 100%), url(${heroBg})` }}>
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
             <span className="inline-block rounded-full bg-card/80 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground shadow-sm">
