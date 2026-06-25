@@ -1,8 +1,9 @@
-// Browser-native speech with Burmese support and language-aware voice picking.
+// Gemini-powered TTS with Burmese support, plus browser SpeechRecognition for input.
 import type { Lang } from "./i18n";
+import { synthesizeSpeech } from "./tts.functions";
 
 export function isSpeechSynthesisSupported(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
+  return typeof window !== "undefined" && typeof Audio !== "undefined";
 }
 
 export function getSpeechRecognition(): any | null {
@@ -17,18 +18,21 @@ export function isSpeechRecognitionSupported(): boolean {
 
 const LANG_TAG: Record<Lang, string> = { en: "en-US", my: "my-MM" };
 
-export function cancelSpeech() {
-  if (isSpeechSynthesisSupported()) window.speechSynthesis.cancel();
-}
+let currentAudio: HTMLAudioElement | null = null;
+let currentToken = 0;
 
-function pickVoice(lang: Lang): SpeechSynthesisVoice | undefined {
-  if (!isSpeechSynthesisSupported()) return;
-  const voices = window.speechSynthesis.getVoices();
-  const want = LANG_TAG[lang];
-  return (
-    voices.find((v) => v.lang === want) ??
-    voices.find((v) => v.lang.startsWith(lang === "my" ? "my" : "en"))
-  );
+export function cancelSpeech() {
+  currentToken++;
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.src = "";
+    } catch {}
+    currentAudio = null;
+  }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
 }
 
 export type SpeakOptions = {
@@ -41,66 +45,39 @@ export type SpeakOptions = {
 
 export function speak(text: string, opts: SpeakOptions = {}) {
   const lang = opts.lang ?? "en";
-  if (!isSpeechSynthesisSupported() || !text.trim()) {
+  if (!text.trim() || typeof window === "undefined") {
     opts.onEnd?.();
     return;
   }
-  window.speechSynthesis.cancel();
+  cancelSpeech();
+  const token = ++currentToken;
 
-  // Ensure voices are loaded (fires later on first load).
-  const doSpeak = () => {
-    const chunks = chunkText(text, 200);
-    let i = 0;
-    const next = () => {
-      if (i >= chunks.length) {
+  (async () => {
+    try {
+      const { audio, mime } = await synthesizeSpeech({
+        data: { text, lang },
+      });
+      if (token !== currentToken) return; // cancelled
+
+      const src = `data:${mime};base64,${audio}`;
+      const a = new Audio(src);
+      a.playbackRate = opts.rate ?? 1;
+      currentAudio = a;
+      a.onplay = () => opts.onStart?.();
+      a.onended = () => {
+        if (currentAudio === a) currentAudio = null;
         opts.onEnd?.();
-        return;
-      }
-      const u = new SpeechSynthesisUtterance(chunks[i++]);
-      u.lang = LANG_TAG[lang];
-      const v = pickVoice(lang);
-      if (v) u.voice = v;
-      u.rate = opts.rate ?? 1;
-      u.pitch = opts.pitch ?? 1;
-      if (i === 1) u.onstart = () => opts.onStart?.();
-      u.onend = () => next();
-      u.onerror = (e) => {
-        if ((e as SpeechSynthesisErrorEvent).error === "interrupted" || (e as SpeechSynthesisErrorEvent).error === "canceled") {
-          opts.onEnd?.();
-          return;
-        }
-        next();
       };
-      window.speechSynthesis.speak(u);
-    };
-    next();
-  };
-
-  if (window.speechSynthesis.getVoices().length === 0) {
-    const onVoices = () => {
-      window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
-      doSpeak();
-    };
-    window.speechSynthesis.addEventListener("voiceschanged", onVoices);
-    setTimeout(doSpeak, 250); // fallback if voiceschanged never fires
-  } else {
-    doSpeak();
-  }
-}
-
-function chunkText(text: string, maxLen: number): string[] {
-  const sentences = text.match(/[^.!?။\n]+[.!?။\n]?\s*/g) ?? [text];
-  const out: string[] = [];
-  let cur = "";
-  for (const s of sentences) {
-    if ((cur + s).length > maxLen && cur) {
-      out.push(cur.trim());
-      cur = "";
+      a.onerror = () => {
+        if (currentAudio === a) currentAudio = null;
+        opts.onEnd?.();
+      };
+      await a.play().catch(() => opts.onEnd?.());
+    } catch (e) {
+      console.error("[tts]", e);
+      opts.onEnd?.();
     }
-    cur += s;
-  }
-  if (cur.trim()) out.push(cur.trim());
-  return out;
+  })();
 }
 
 export function createRecognizer(lang: Lang): any | null {
