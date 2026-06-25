@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { PrefsProvider, usePrefs } from "@/lib/prefs-context";
 import { AppHeader } from "@/components/app-header";
 import { VoiceNav } from "@/components/voice-nav";
+import { IOSBanner } from "@/components/ios-banner";
 import { speak, isSpeechSynthesisSupported } from "@/lib/speech";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -141,6 +142,7 @@ function AppChrome() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
+      <IOSBanner />
       <AppHeader />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6">
         <Outlet />
