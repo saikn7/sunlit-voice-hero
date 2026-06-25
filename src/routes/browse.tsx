@@ -156,7 +156,14 @@ function BrowsePage() {
 
       {user && (
         <>
-          <audio ref={audioRef} controls className="w-full" onEnded={() => setPlayingId(null)} />
+          <audio
+            ref={audioRef}
+            controls
+            className="w-full"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={() => { setIsPlaying(false); setPlayingId(null); }}
+          />
 
           {isLoading && <p className="text-muted-foreground">{t("loading")}</p>}
 
