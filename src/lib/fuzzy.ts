@@ -6,11 +6,17 @@ function normalize(s: string): string {
   // codepoint sequences so user-typed and stored text compare reliably.
   let out = (s ?? "");
   try { out = out.normalize("NFC"); } catch {}
+  // Skip toLowerCase for Burmese-containing strings (Unicode-safety rule).
+  if (!/[\u1000-\u109F\uAA60-\uAA7F\uA9E0-\uA9FF]/.test(out)) out = out.toLowerCase();
   return out
-    .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// NFC-only normalize (preserves case) — used for exact Burmese comparisons.
+export function nfc(s: string): string {
+  try { return (s ?? "").normalize("NFC").trim(); } catch { return (s ?? "").trim(); }
 }
 
 // True when the string contains Myanmar script — used to enable
