@@ -176,7 +176,20 @@ function ListenPage() {
       const txt = e.results?.[0]?.[0]?.transcript ?? "";
       handleCommand(txt);
     };
-    r.onerror = () => setListening(false);
+    r.onerror = (ev: any) => {
+      setListening(false);
+      const code = ev?.error;
+      const isQuota = /429|quota|rate/i.test(ev?.message ?? "");
+      if (code === "not-allowed") {
+        respond(lang === "my" ? "မိုက်ခရိုဖုန်း ခွင့်ပြုချက် မရှိပါ။" : "Microphone permission was denied.");
+      } else if (code === "no-speech") {
+        respond(lang === "my" ? "အသံ မကြားရပါ — ထပ်ပြောကြည့်ပါ။" : "I didn't catch that — please try again.");
+      } else if (isQuota) {
+        respond(lang === "my" ? "အသံ မှတ်တမ်း ကန့်သတ်ချက် ပြည့်သွားပါပြီ။ ခဏနေပြီး ပြန်ကြိုးစားပါ။" : "Voice service is rate-limited right now. Please try again in a moment.");
+      } else {
+        respond(lang === "my" ? "အသံ မှတ်တမ်း မအောင်မြင်ပါ။" : "Voice recognition failed. Please try again.");
+      }
+    };
     r.onend = () => setListening(false);
     try {
       r.start();

@@ -45,13 +45,17 @@ function pickVoice(lang: Lang): SpeechSynthesisVoice | null {
     v = voices.find((x) => /burmese|myanmar|မြန်မာ/i.test(x.name));
     if (v) return v;
   }
-  // 4. Prefer voice matching the browser's preferred languages
-  for (const bl of browserLangs) {
-    v = voices.find((x) => x.lang?.toLowerCase() === bl);
-    if (v) return v;
-    const bp = bl.split("-")[0];
-    v = voices.find((x) => x.lang?.toLowerCase().startsWith(bp + "-"));
-    if (v) return v;
+  // 4. Prefer voice matching the browser's preferred languages — but never
+  //    fall back to a non-Burmese voice when speaking Burmese, that would
+  //    pronounce the text with the wrong phonetics.
+  if (lang !== "my") {
+    for (const bl of browserLangs) {
+      v = voices.find((x) => x.lang?.toLowerCase() === bl);
+      if (v) return v;
+      const bp = bl.split("-")[0];
+      v = voices.find((x) => x.lang?.toLowerCase().startsWith(bp + "-"));
+      if (v) return v;
+    }
   }
   return null;
 }
@@ -202,6 +206,16 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
   let aborted = false;
   let stopped = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let vadRafId: number | null = null;
+  let audioCtx: AudioContext | null = null;
+  const SILENCE_MS = 1800;       // stop after this long without voice
+  const MIN_SPEECH_MS = 400;     // need this much voice before silence counts
+  const RMS_THRESHOLD = 0.012;   // ~mic noise floor for "voice"
+
+  const stopVad = () => {
+    if (vadRafId !== null) { cancelAnimationFrame(vadRafId); vadRafId = null; }
+    if (audioCtx) { try { audioCtx.close(); } catch {} audioCtx = null; }
+  };
 
   const rec: GeminiRecognizer = {
     lang: LANG_TAG[lang],
@@ -247,6 +261,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
             rec.onerror?.({ error: "audio-capture" });
           };
           recorder.onstop = async () => {
+            stopVad();
             const tracks = stream?.getTracks() ?? [];
             tracks.forEach((t) => t.stop());
             stream = null;
@@ -280,11 +295,47 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
 
           recorder.start();
 
+          // Voice-activity detection: auto-stop after sustained silence so the
+          // user doesn't need to press stop after they finish speaking.
+          try {
+            const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+            if (Ctx && stream) {
+              const ctx: AudioContext = new Ctx();
+              audioCtx = ctx;
+              const source = ctx.createMediaStreamSource(stream);
+              const analyser = ctx.createAnalyser();
+              analyser.fftSize = 1024;
+              source.connect(analyser);
+              const buf = new Float32Array(analyser.fftSize);
+              const startedAt = performance.now();
+              let lastVoiceAt = startedAt;
+              let sawVoice = false;
+              const tick = () => {
+                if (stopped || !recorder || recorder.state === "inactive") return;
+                analyser.getFloatTimeDomainData(buf);
+                let sum = 0;
+                for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+                const rms = Math.sqrt(sum / buf.length);
+                const now = performance.now();
+                if (rms > RMS_THRESHOLD) { lastVoiceAt = now; sawVoice = true; }
+                const elapsed = now - startedAt;
+                const silentFor = now - lastVoiceAt;
+                if (sawVoice && elapsed > MIN_SPEECH_MS && silentFor > SILENCE_MS) {
+                  rec.stop();
+                  return;
+                }
+                vadRafId = requestAnimationFrame(tick);
+              };
+              vadRafId = requestAnimationFrame(tick);
+            }
+          } catch { /* VAD is best-effort */ }
+
           // Safety cap so a forgotten session doesn't record forever.
           timeoutId = setTimeout(() => {
             if (!stopped) rec.stop();
           }, MAX_RECORDING_MS);
         } catch (err: any) {
+          stopVad();
           const name = err?.name;
           const code =
             name === "NotAllowedError" || name === "SecurityError" ? "not-allowed" :
@@ -299,6 +350,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
       if (stopped) return;
       stopped = true;
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      stopVad();
       try {
         if (recorder && recorder.state !== "inactive") recorder.stop();
         else rec.onend?.();
@@ -310,6 +362,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
       aborted = true;
       stopped = true;
       if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      stopVad();
       try {
         if (recorder && recorder.state !== "inactive") recorder.stop();
       } catch {}
