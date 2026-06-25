@@ -38,7 +38,7 @@ function HomePage() {
 
   return (
     <div className="-mx-4 -my-6">
-      <section className="px-4 py-14 md:py-24" style={{ background: "var(--gradient-hero)" }}>
+      <section className="px-4 py-10 md:py-16" style={{ background: "var(--gradient-hero)" }}>
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
             <span className="inline-block rounded-full bg-card/80 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground shadow-sm">
