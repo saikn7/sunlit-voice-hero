@@ -106,6 +106,22 @@ export function fuzzyScore<T extends Searchable>(item: T, query: string): number
     if (sim > 0.6) score += Math.round(sim * 30);
   }
 
+  // Burmese / non-space-delimited: do sliding-window substring match
+  // against the haystack so a partial Burmese phrase still scores.
+  if (hasMyanmar(q) || hasMyanmar(haystack)) {
+    const qNoSpace = q.replace(/\s+/g, "");
+    const hNoSpace = haystack.replace(/\s+/g, "");
+    if (qNoSpace.length >= 2 && hNoSpace.includes(qNoSpace)) score += 80;
+    // 2-char shingles for very short partial inputs
+    if (qNoSpace.length >= 2) {
+      let hits = 0;
+      for (let i = 0; i < qNoSpace.length - 1; i++) {
+        if (hNoSpace.includes(qNoSpace.slice(i, i + 2))) hits++;
+      }
+      score += Math.min(hits, 8) * 4;
+    }
+  }
+
   return score;
 }
 
