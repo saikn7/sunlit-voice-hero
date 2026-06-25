@@ -11,12 +11,20 @@ export function isSpeechSynthesisSupported(): boolean {
 
 export function isSpeechRecognitionSupported(): boolean {
   if (typeof window === "undefined") return false;
-  return (
+  const w = window as any;
+  const hasWebSpeech = !!(w.SpeechRecognition || w.webkitSpeechRecognition);
+  const hasRecorder =
     typeof navigator !== "undefined" &&
     !!navigator.mediaDevices &&
     typeof navigator.mediaDevices.getUserMedia === "function" &&
-    typeof window.MediaRecorder !== "undefined"
-  );
+    typeof window.MediaRecorder !== "undefined";
+  return hasWebSpeech || hasRecorder;
+}
+
+export function hasNativeWebSpeech(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as any;
+  return !!(w.SpeechRecognition || w.webkitSpeechRecognition);
 }
 
 const LANG_TAG: Record<Lang, string> = { en: "en-US", my: "my-MM" };
