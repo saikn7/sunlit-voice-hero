@@ -186,6 +186,64 @@ async function blobToBase64(blob: Blob): Promise<string> {
   }
   return btoa(bin);
 }
+function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiRecognizer | null {
+  if (typeof window === "undefined") return null;
+  const w = window as any;
+  const Impl = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+  if (!Impl) return null;
+
+  let stopped = false;
+  let aborted = false;
+  const sr = new Impl();
+  sr.lang = LANG_TAG[lang];
+  sr.continuous = !!opts.continuous;
+  sr.interimResults = false;
+  sr.maxAlternatives = 1;
+
+  const rec: GeminiRecognizer = {
+    lang: LANG_TAG[lang],
+    start() {
+      stopped = false;
+      aborted = false;
+      try { sr.start(); } catch { /* already started */ }
+    },
+    stop() {
+      stopped = true;
+      try { sr.stop(); } catch {}
+    },
+    abort() {
+      aborted = true;
+      stopped = true;
+      try { sr.abort(); } catch {}
+    },
+  };
+
+  sr.onresult = (e: any) => {
+    if (aborted) return;
+    // Emit only finalized results.
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) {
+        const t = r[0]?.transcript ?? "";
+        if (t.trim()) rec.onresult?.({ results: [[{ transcript: t }]] });
+      }
+    }
+  };
+  sr.onerror = (e: any) => {
+    if (e?.error === "no-speech" || e?.error === "aborted") return; // benign
+    rec.onerror?.({ error: e?.error || "audio-capture", message: e?.message });
+  };
+  sr.onend = () => {
+    // Auto-restart in continuous mode unless user stopped.
+    if (opts.continuous && !stopped && !aborted) {
+      try { sr.start(); return; } catch {}
+    }
+    rec.onend?.();
+  };
+
+  return rec;
+}
+
 
 export type RecognizerOptions = { continuous?: boolean };
 
