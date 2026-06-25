@@ -300,9 +300,10 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
           try {
             const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
             if (Ctx && stream) {
-              audioCtx = new Ctx();
-              const source = audioCtx.createMediaStreamSource(stream);
-              const analyser = audioCtx.createAnalyser();
+              const ctx: AudioContext = new Ctx();
+              audioCtx = ctx;
+              const source = ctx.createMediaStreamSource(stream);
+              const analyser = ctx.createAnalyser();
               analyser.fftSize = 1024;
               source.connect(analyser);
               const buf = new Float32Array(analyser.fftSize);
