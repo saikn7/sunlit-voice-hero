@@ -295,11 +295,46 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
 
           recorder.start();
 
+          // Voice-activity detection: auto-stop after sustained silence so the
+          // user doesn't need to press stop after they finish speaking.
+          try {
+            const Ctx = (window as any).AudioContext ?? (window as any).webkitAudioContext;
+            if (Ctx && stream) {
+              audioCtx = new Ctx();
+              const source = audioCtx.createMediaStreamSource(stream);
+              const analyser = audioCtx.createAnalyser();
+              analyser.fftSize = 1024;
+              source.connect(analyser);
+              const buf = new Float32Array(analyser.fftSize);
+              const startedAt = performance.now();
+              let lastVoiceAt = startedAt;
+              let sawVoice = false;
+              const tick = () => {
+                if (stopped || !recorder || recorder.state === "inactive") return;
+                analyser.getFloatTimeDomainData(buf);
+                let sum = 0;
+                for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+                const rms = Math.sqrt(sum / buf.length);
+                const now = performance.now();
+                if (rms > RMS_THRESHOLD) { lastVoiceAt = now; sawVoice = true; }
+                const elapsed = now - startedAt;
+                const silentFor = now - lastVoiceAt;
+                if (sawVoice && elapsed > MIN_SPEECH_MS && silentFor > SILENCE_MS) {
+                  rec.stop();
+                  return;
+                }
+                vadRafId = requestAnimationFrame(tick);
+              };
+              vadRafId = requestAnimationFrame(tick);
+            }
+          } catch { /* VAD is best-effort */ }
+
           // Safety cap so a forgotten session doesn't record forever.
           timeoutId = setTimeout(() => {
             if (!stopped) rec.stop();
           }, MAX_RECORDING_MS);
         } catch (err: any) {
+          stopVad();
           const name = err?.name;
           const code =
             name === "NotAllowedError" || name === "SecurityError" ? "not-allowed" :
