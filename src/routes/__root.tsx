@@ -15,6 +15,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { PrefsProvider, usePrefs } from "@/lib/prefs-context";
 import { AppHeader } from "@/components/app-header";
 import { VoiceNav } from "@/components/voice-nav";
+import { IOSBanner } from "@/components/ios-banner";
 import { speak, isSpeechSynthesisSupported } from "@/lib/speech";
 import { supabase } from "@/integrations/supabase/client";
 
