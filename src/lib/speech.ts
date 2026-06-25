@@ -245,9 +245,10 @@ function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiR
     if (aborted) return;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      const t = r[0]?.transcript ?? "";
+      const t = (r[0]?.transcript ?? "").normalize("NFC");
       if (r.isFinal) {
         clearInterim();
+        try { console.log("[voice] recognized:", t); } catch {}
         emit(t);
         if (opts.continuous) { try { sr.stop(); } catch {} }
       } else if (t && t !== interimText) {
@@ -257,6 +258,7 @@ function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiR
           const pending = interimText;
           clearInterim();
           if (pending) {
+            try { console.log("[voice] recognized (interim):", pending); } catch {}
             emit(pending);
             try { sr.stop(); } catch {}
           }
@@ -266,6 +268,18 @@ function createWebSpeechRecognizer(lang: Lang, opts: RecognizerOptions): GeminiR
   };
   sr.onerror = (e: any) => {
     if (e?.error === "no-speech" || e?.error === "aborted") return; // benign
+    // Burmese (my-MM) isn't supported on all browsers; fall back to
+    // auto-detect (no lang) and restart so the user can still talk.
+    if (e?.error === "language-not-supported" && sr.lang) {
+      try { console.log("[voice] Switching to auto voice mode"); } catch {}
+      try {
+        window.dispatchEvent(new CustomEvent("sv-voice-feedback", {
+          detail: { msg: "Switching to auto voice mode" },
+        }));
+      } catch {}
+      try { sr.lang = ""; } catch {}
+      try { sr.start(); return; } catch {}
+    }
     rec.onerror?.({ error: e?.error || "audio-capture", message: e?.message });
   };
   sr.onend = () => {
