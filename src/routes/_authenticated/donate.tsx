@@ -460,7 +460,7 @@ function DonatePage() {
 
         <button
           type="submit"
-          disabled={busy || !recordedBlob}
+          disabled={busy || !recordedBlob || !copyrightOk}
           className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-lg font-bold text-primary-foreground shadow-elevated transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span aria-hidden>♥</span>
