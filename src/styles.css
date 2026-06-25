@@ -123,8 +123,16 @@
   body {
     background: var(--color-background);
     color: var(--color-foreground);
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    /* Burmese fallback ensures Myanmar Unicode renders correctly on iOS Safari
+       and any system missing a Burmese system font. */
+    font-family: "Inter", "Noto Sans Myanmar", "Myanmar Text", "Padauk", "Myanmar MN", system-ui, -apple-system, sans-serif;
     min-height: 100dvh;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  :lang(my), [lang="my"] {
+    font-family: "Noto Sans Myanmar", "Myanmar Text", "Padauk", "Myanmar MN", "Inter", system-ui, sans-serif;
+    line-height: 1.7;
   }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
 
