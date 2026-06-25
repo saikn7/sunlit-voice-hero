@@ -44,11 +44,11 @@ function HomePage() {
             <span className="inline-block rounded-full bg-card/80 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground shadow-sm">
               {t("heroBadge")}
             </span>
-            <h1 className="mt-5 text-balance text-4xl leading-[1.08] tracking-tight md:text-6xl" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="mt-3 text-balance text-3xl leading-[1.15] tracking-tight font-medium md:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
               {t("heroHeadline")}
             </h1>
-            <p className="mt-5 max-w-xl text-base font-normal text-foreground/75 md:text-lg">{t("heroSubtext")}</p>
-            <div className="mt-7 flex flex-wrap items-center gap-2.5">
+            <p className="mt-3 max-w-xl text-base font-normal text-foreground/75 md:text-lg">{t("heroSubtext")}</p>
+            <div className="mt-5 flex flex-wrap items-center gap-2.5">
               <button type="button" onClick={() => go("/donate")} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-elevated transition hover:opacity-95 md:text-base">
                 <span aria-hidden>♥</span> {t("donateYourVoice")}
               </button>
