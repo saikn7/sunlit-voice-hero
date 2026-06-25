@@ -133,24 +133,6 @@ function BrowsePage() {
     prevCountRef.current = n;
   }, [donations.length]);
 
-    const audio = audioRef.current;
-    if (!audio) return;
-    // Same track: toggle pause/play
-    if (playingId === d.id) {
-      if (audio.paused) audio.play().catch(() => {});
-      else audio.pause();
-      return;
-    }
-    const url = await resolveUrl(d);
-    if (!url) return;
-    cancelSpeech();
-    audio.pause();
-    audio.src = url;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-    setPlayingId(d.id);
-  }, [resolveUrl, playingId]);
-
   // Voice command handler: filters, play/pause/stop, "play <title>", "find <title>"
   React.useEffect(() => {
     const announce = (msg: string, silent = false) => {
