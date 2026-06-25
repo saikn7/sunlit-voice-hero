@@ -274,7 +274,7 @@ function BrowsePage() {
     };
     window.addEventListener("sv-voice", onVoice as EventListener);
     return () => window.removeEventListener("sv-voice", onVoice as EventListener);
-  }, [donations, filtered, playingId, togglePlay]);
+  }, [playingId, togglePlay, playByMatch]);
 
   return (
     <div className="grid gap-6 sm:gap-8">
