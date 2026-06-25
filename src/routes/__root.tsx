@@ -142,6 +142,7 @@ function AppChrome() {
   return (
     <>
       <a href="#main" className="skip-link">Skip to main content</a>
+      <IOSBanner />
       <AppHeader />
       <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6">
         <Outlet />
