@@ -45,10 +45,12 @@ function DonatePage() {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [keywordsStr, setKeywordsStr] = React.useState("");
+  const [copyrightOk, setCopyrightOk] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [elapsed, setElapsed] = React.useState(0);
+  const moderate = useServerFn(moderateDonation);
   const [confirmation, setConfirmation] = React.useState<{
     title: string;
     durationSeconds: number;
