@@ -209,7 +209,7 @@ function BrowsePage() {
       const audio = audioRef.current;
 
       // Pause / stop
-      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(detail.raw)) {
+      if (/\b(pause|stop|halt|quiet|silent|mute)\b/i.test(text) || /ရပ်|ခဏ/.test(rawNFC)) {
         if (audio && !audio.paused) audio.pause();
         announce("Paused", true);
         e.preventDefault();
@@ -224,15 +224,16 @@ function BrowsePage() {
       }
       // Plain "play" — toggle current or play first
       if (/^play$/i.test(text)) {
+        const first = filteredRef.current[0];
         if (audio && playingId && audio.paused) audio.play().catch(() => {});
-        else if (!playingId && filtered[0]) togglePlay(filtered[0]);
+        else if (!playingId && first) togglePlay(first);
         announce("Playing", true);
         e.preventDefault();
         return;
       }
 
       // Category by bare name or short phrase
-      const bareCat = CATEGORIES.find((c) => c.match.test(text));
+      const bareCat = CATEGORIES.find((c) => c.match.test(text) || c.match.test(rawNFC));
       if (bareCat && text.split(" ").length <= 3) {
         applyCategory(bareCat.id);
         e.preventDefault();
@@ -240,7 +241,7 @@ function BrowsePage() {
       }
 
       // "play/find/show <term>" — category shortcut or fuzzy title match
-      const m = text.match(/^(?:play|listen to|find|search|open|show|filter|category)\s+(.+)$/i);
+      const m = rawNFC.match(/^(?:play|listen to|find|search|open|show|filter|category|ဖွင့်|ရှာ)\s+(.+)$/i);
       if (m) {
         const term = m[1].trim();
         const cat = CATEGORIES.find((c) => c.id !== "all" && c.match.test(term));
@@ -249,16 +250,26 @@ function BrowsePage() {
           e.preventDefault();
           return;
         }
-        const results = fuzzySearch(donations, term);
-        if (results[0]) {
-          togglePlay(results[0]);
-          announce(`Playing ${results[0].title}`, true);
+        const hit = playByMatch(term);
+        if (hit) {
+          announce(`Playing ${hit.title}`, true);
           e.preventDefault();
           return;
         }
         announce("No matching audio found");
         e.preventDefault();
         return;
+      }
+
+      // Burmese / bare-title fallback: try matching the whole transcript
+      // against the live audio index (Unicode-safe, no toLowerCase needed).
+      if (rawNFC.length >= 2) {
+        const hit = playByMatch(rawNFC);
+        if (hit) {
+          announce(`Playing ${hit.title}`, true);
+          e.preventDefault();
+          return;
+        }
       }
     };
     window.addEventListener("sv-voice", onVoice as EventListener);
