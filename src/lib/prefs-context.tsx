@@ -38,8 +38,11 @@ function applyContrast(on: boolean) {
 
 function detectInitialLang(): Lang {
   if (typeof window === "undefined") return "en";
-  const stored = window.localStorage.getItem(LS_LANG) as Lang | null;
-  if (stored === "en" || stored === "my") return stored;
+  const stored = (window.localStorage.getItem(LS_LANG) ?? window.localStorage.getItem(LS_LANG_LEGACY)) as Lang | null;
+  if (stored === "en" || stored === "my") {
+    window.localStorage.setItem(LS_LANG, stored);
+    return stored;
+  }
   const nav = navigator.language?.toLowerCase() ?? "";
   if (nav.startsWith("my")) return "my";
   return "en";
