@@ -71,9 +71,13 @@ export function fuzzyScore<T extends Searchable>(item: T, query: string): number
   for (const tok of expanded) if (hTokens.has(tok)) overlap++;
   score += overlap * 20;
 
-  // Per-token substring (handles partial words)
+  // Per-token substring + prefix match against title tokens (handles partial words)
+  const titleTokens = normalize(item.title).split(" ").filter(Boolean);
   for (const tok of qTokens) {
-    if (tok.length >= 3 && haystack.includes(tok)) score += 8;
+    if (tok.length >= 2 && haystack.includes(tok)) score += 10;
+    for (const tt of titleTokens) {
+      if (tok.length >= 2 && tt.startsWith(tok)) score += 15;
+    }
   }
 
   // Title edit-distance for very close misspellings
