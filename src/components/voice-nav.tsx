@@ -28,7 +28,7 @@ function detectIOS(): boolean {
 
 export function VoiceNav() {
   const navigate = useNavigate();
-  const { lang, setTheme } = usePrefs();
+  const { lang, setTheme, setLang } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
   const [subtitle, setSubtitle] = React.useState<string>("");
@@ -66,6 +66,21 @@ export function VoiceNav() {
     if (!text) return;
     try { console.log("[voice] transcript:", safe.trim()); } catch {}
     showSubtitle(safe.trim());
+
+    // Language intent — highest priority. Match clear intent only.
+    const intentText = safe.trim().toLowerCase();
+    const enRe = /\b(english|switch to english|use english(?: language)?|change to english|in english)\b/;
+    const myRe = /\b(myanmar|burmese|switch to (?:myanmar|burmese)|use (?:myanmar|burmese)(?: language)?|change to (?:myanmar|burmese)|in (?:myanmar|burmese))\b|မြန်မာ/;
+    if (enRe.test(intentText)) {
+      setLang("en");
+      respond("Switched to English.");
+      return;
+    }
+    if (myRe.test(intentText)) {
+      setLang("my");
+      respond("မြန်မာဘာသာသို့ ပြောင်းပြီးပါပြီ။");
+      return;
+    }
 
     // Theme intent detection (English + Burmese). Must match clear intent only.
     const themeText = safe.trim().toLowerCase();
@@ -116,7 +131,7 @@ export function VoiceNav() {
     }
 
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
-  }, [lang, navigate, respond, showSubtitle, setTheme]);
+  }, [lang, navigate, respond, showSubtitle, setTheme, setLang]);
 
   const teardownRecognizer = React.useCallback(() => {
     const r = recognizerRef.current;
