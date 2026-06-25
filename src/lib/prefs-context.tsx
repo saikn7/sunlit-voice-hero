@@ -19,7 +19,7 @@ type PrefsCtx = {
 
 const Ctx = React.createContext<PrefsCtx | null>(null);
 const LS_LANG = "sv_lang";
-const LS_THEME = "sv_theme";
+const LS_THEME = "theme";
 const LS_CONTRAST = "sv_contrast";
 const LS_DEMO = "sv_demo";
 
