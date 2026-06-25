@@ -187,8 +187,17 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(bin);
 }
 
-export function createRecognizer(lang: Lang): GeminiRecognizer | null {
+export type RecognizerOptions = { continuous?: boolean };
+
+export function createRecognizer(lang: Lang, opts: RecognizerOptions = {}): GeminiRecognizer | null {
   if (!isSpeechRecognitionSupported()) return null;
+
+  // Prefer the native Web Speech API when available — it's instant, free,
+  // supports continuous listening, and doesn't need a server roundtrip.
+  if (hasNativeWebSpeech()) {
+    const native = createWebSpeechRecognizer(lang, opts);
+    if (native) return native;
+  }
 
   let stream: MediaStream | null = null;
   let recorder: MediaRecorder | null = null;
