@@ -147,6 +147,15 @@ export function VoiceNav() {
       >
         {hint}
       </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className={`fixed bottom-5 left-1/2 z-50 -translate-x-1/2 max-w-[90vw] rounded-lg bg-foreground/90 px-4 py-2 text-base font-medium text-background shadow-elevated transition ${
+          subtitle || listening ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {subtitle || (listening ? (lang === "my" ? "နားထောင်နေသည်…" : "Listening…") : "")}
+      </div>
     </>
   );
 }
