@@ -429,16 +429,14 @@ function BrowsePage() {
                   <span aria-hidden>{showPause ? "❚❚" : "▶"}</span>
                   {showPause ? t("pause") : t("play")}
                 </button>
-                {user && user.id !== d.user_id && (
-                  <button
-                    type="button"
-                    onClick={() => { setReportingId(d.id); setReportMsg(null); }}
-                    className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
-                    aria-label="Report audio"
-                  >
-                    ⚠️ Report
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => { setReportingId(d.id); setReportMsg(null); }}
+                  className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+                  aria-label="Report audio"
+                >
+                  ⚠️ Report
+                </button>
               </div>
 
             </li>
