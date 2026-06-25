@@ -1,6 +1,6 @@
 // Gemini-powered TTS + STT (Burmese-friendly), with browser SpeechRecognition fallback for compatibility.
 import type { Lang } from "./i18n";
-import { synthesizeSpeech } from "./tts.functions";
+
 import { transcribeAudio } from "./stt.functions";
 
 export function isSpeechSynthesisSupported(): boolean {
@@ -124,29 +124,12 @@ export function speak(text: string, opts: SpeakOptions = {}) {
     }
   };
 
-  (async () => {
-    try {
-      const { audio, mime } = await synthesizeSpeech({ data: { text, lang } });
-      if (token !== currentToken) return;
-      const src = `data:${mime};base64,${audio}`;
-      const a = new Audio(src);
-      a.playbackRate = opts.rate ?? 1;
-      currentAudio = a;
-      a.onplay = () => opts.onStart?.();
-      a.onended = () => {
-        if (currentAudio === a) currentAudio = null;
-        opts.onEnd?.();
-      };
-      a.onerror = () => {
-        if (currentAudio === a) currentAudio = null;
-        playBrowserFallback();
-      };
-      await a.play().catch(() => playBrowserFallback());
-    } catch (e) {
-      console.warn("[tts] Gemini failed, falling back to browser SpeechSynthesis", e);
-      playBrowserFallback();
-    }
-  })();
+  // Gemini TTS quota is frequently exhausted (429). Use the free browser
+  // SpeechSynthesis API directly so the app keeps working without external
+  // API calls. `synthesizeSpeech` remains exported for callers that opt in,
+  // but `speak()` no longer depends on it.
+  void token;
+  playBrowserFallback();
 }
 
 // ----------------------------------------------------------------------------
