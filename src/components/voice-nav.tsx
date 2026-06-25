@@ -24,17 +24,32 @@ export function VoiceNav() {
   const { lang } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
+  const [subtitle, setSubtitle] = React.useState<string>("");
   const recognizerRef = React.useRef<any>(null);
+  const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showHint = React.useCallback((msg: string, ms = 3500) => {
+    setHint(msg);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setHint(""), ms);
+  }, []);
+
+  const showSubtitle = React.useCallback((msg: string, ms = 4000) => {
+    setSubtitle(msg);
+    if (subtitleTimerRef.current) clearTimeout(subtitleTimerRef.current);
+    subtitleTimerRef.current = setTimeout(() => setSubtitle(""), ms);
+  }, []);
 
   const respond = React.useCallback((msg: string) => {
-    setHint(msg);
+    showHint(msg);
     speak(msg, { lang });
-  }, [lang]);
+  }, [lang, showHint]);
 
   const handle = React.useCallback((raw: string) => {
     const text = (raw || "").trim().toLowerCase();
     if (!text) return;
-    setHint(`You said: ${text}`);
+    showSubtitle(raw.trim());
 
     // Try to find an action verb + destination
     for (const { re, dest } of ROUTES) {
@@ -63,7 +78,7 @@ export function VoiceNav() {
     }
 
     respond(lang === "my" ? "နားမလည်ပါ။ ထပ်ပြောကြည့်ပါ။" : "Sorry, I didn't catch that.");
-  }, [lang, navigate, respond]);
+  }, [lang, navigate, respond, showSubtitle]);
 
   const start = React.useCallback(() => {
     if (!isSpeechRecognitionSupported()) {
@@ -79,11 +94,11 @@ export function VoiceNav() {
     try {
       r.start();
       setListening(true);
-      setHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say a page like 'browse' or 'donate'.");
+      showHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say a page like 'browse' or 'donate'.", 2500);
     } catch {
       setListening(false);
     }
-  }, [handle, lang, respond]);
+  }, [handle, lang, respond, showHint]);
 
   const stop = React.useCallback(() => {
     try { recognizerRef.current?.stop(); } catch {}
@@ -131,6 +146,15 @@ export function VoiceNav() {
         }`}
       >
         {hint}
+      </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className={`fixed bottom-5 left-1/2 z-50 -translate-x-1/2 max-w-[90vw] rounded-lg bg-foreground/90 px-4 py-2 text-base font-medium text-background shadow-elevated transition ${
+          subtitle || listening ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {subtitle || (listening ? (lang === "my" ? "နားထောင်နေသည်…" : "Listening…") : "")}
       </div>
     </>
   );
