@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePrefs } from "@/lib/prefs-context";
-import { fuzzySearch } from "@/lib/fuzzy";
+import { fuzzySearch, rankMatches, nfc } from "@/lib/fuzzy";
 import { cancelSpeech } from "@/lib/speech";
 import type { Tables } from "@/integrations/supabase/types";
 import type { TKey } from "@/lib/i18n";
