@@ -19,15 +19,29 @@ const ROUTES: { re: RegExp; dest: Dest }[] = [
   { re: /\b(sign in|sign up|log in|login|account|auth)\b/, dest: { to: "/auth", en: "Opening sign in.", my: "အကောင့်ဝင်ရန် ဖွင့်နေသည်။" } },
 ];
 
+function detectIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const isiOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Mac") && "ontouchend" in document);
+  return isiOS;
+}
+
 export function VoiceNav() {
   const navigate = useNavigate();
   const { lang } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
   const [subtitle, setSubtitle] = React.useState<string>("");
+  const [typeMode, setTypeMode] = React.useState(false);
+  const [typedValue, setTypedValue] = React.useState("");
   const recognizerRef = React.useRef<any>(null);
   const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const voiceUnsupported = React.useMemo(
+    () => typeof window !== "undefined" && !isSpeechRecognitionSupported(),
+    [],
+  );
+  const isIOS = React.useMemo(detectIOS, []);
 
   const showHint = React.useCallback((msg: string, ms = 3500) => {
     setHint(msg);
