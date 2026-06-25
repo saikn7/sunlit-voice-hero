@@ -67,6 +67,21 @@ export function VoiceNav() {
     try { console.log("[voice] transcript:", safe.trim()); } catch {}
     showSubtitle(safe.trim());
 
+    // Language intent — highest priority. Match clear intent only.
+    const intentText = safe.trim().toLowerCase();
+    const enRe = /\b(english|switch to english|use english(?: language)?|change to english|in english)\b/;
+    const myRe = /\b(myanmar|burmese|switch to (?:myanmar|burmese)|use (?:myanmar|burmese)(?: language)?|change to (?:myanmar|burmese)|in (?:myanmar|burmese))\b|မြန်မာ/;
+    if (enRe.test(intentText)) {
+      setLang("en");
+      respond("Switched to English.");
+      return;
+    }
+    if (myRe.test(intentText)) {
+      setLang("my");
+      respond("မြန်မာဘာသာသို့ ပြောင်းပြီးပါပြီ။");
+      return;
+    }
+
     // Theme intent detection (English + Burmese). Must match clear intent only.
     const themeText = safe.trim().toLowerCase();
     const lightRe = /\b(light mode|switch to light|turn on light(?: mode)?|light theme|enable light)\b|အလင်းမုဒ်/;
