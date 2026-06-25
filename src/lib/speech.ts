@@ -261,6 +261,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
             rec.onerror?.({ error: "audio-capture" });
           };
           recorder.onstop = async () => {
+            stopVad();
             const tracks = stream?.getTracks() ?? [];
             tracks.forEach((t) => t.stop());
             stream = null;
