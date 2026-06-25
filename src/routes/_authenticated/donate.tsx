@@ -156,17 +156,29 @@ function DonatePage() {
         .map((k) => k.trim().toLowerCase())
         .filter(Boolean);
 
-      const { error: insErr } = await supabase.from("donations").insert({
-        user_id: user.id,
-        title: title.trim() || t("untitled"),
-        description: description.trim() || null,
-        keywords,
-        language: lang,
-        audio_path: path,
-        mime_type: mime,
-        duration_seconds: elapsed || null,
-      });
+      const { data: inserted, error: insErr } = await supabase
+        .from("donations")
+        .insert({
+          user_id: user.id,
+          title: title.trim() || t("untitled"),
+          description: description.trim() || null,
+          keywords,
+          language: lang,
+          audio_path: path,
+          mime_type: mime,
+          duration_seconds: elapsed || null,
+          copyright_confirmed: copyrightOk,
+        })
+        .select("id")
+        .single();
       if (insErr) throw insErr;
+
+      // Fire-and-forget AI moderation; runs in background, updates risk_flag.
+      if (inserted?.id) {
+        moderate({ data: { donationId: inserted.id } }).catch((err) => {
+          console.warn("Moderation failed:", err);
+        });
+      }
 
       const submittedTitle = title.trim() || t("untitled");
       const submittedDuration = elapsed;
