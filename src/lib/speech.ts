@@ -159,6 +159,8 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
 
           stream = await navigator.mediaDevices.getUserMedia({
             audio: {
+              sampleRate: { ideal: 16000 },
+              channelCount: { ideal: 1 },
               echoCancellation: true,
               noiseSuppression: true,
               autoGainControl: true,
@@ -170,7 +172,7 @@ export function createRecognizer(lang: Lang): GeminiRecognizer | null {
           }
 
           const mimeType = pickMimeType();
-          recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+          recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 128000 } : { audioBitsPerSecond: 128000 });
           recorder.ondataavailable = (e) => {
             if (e.data && e.data.size > 0) chunks.push(e.data);
           };

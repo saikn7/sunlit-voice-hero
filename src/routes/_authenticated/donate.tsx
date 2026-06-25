@@ -76,10 +76,20 @@ function DonatePage() {
   async function startRecording() {
     setError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: { ideal: 16000 },
+          channelCount: { ideal: 1 },
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       streamRef.current = stream;
       const { mime } = pickMimeType();
-      const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      const mr = mime
+        ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 128000 })
+        : new MediaRecorder(stream, { audioBitsPerSecond: 128000 });
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
@@ -303,6 +313,11 @@ function DonatePage() {
             <p className="text-base font-semibold" aria-live="polite">
               {recording ? `${t("stop")} · ${elapsed}s` : t("record")}
             </p>
+            {recording && (
+              <p className="text-sm text-primary animate-pulse">
+                {t("keepTalking")}
+              </p>
+            )}
           </div>
 
           {/* Upload */}
