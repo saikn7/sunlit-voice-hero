@@ -94,11 +94,11 @@ export function VoiceNav() {
     try {
       r.start();
       setListening(true);
-      setHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say a page like 'browse' or 'donate'.");
+      showHint(lang === "my" ? "နားထောင်နေသည်..." : "Listening… say a page like 'browse' or 'donate'.", 2500);
     } catch {
       setListening(false);
     }
-  }, [handle, lang, respond]);
+  }, [handle, lang, respond, showHint]);
 
   const stop = React.useCallback(() => {
     try { recognizerRef.current?.stop(); } catch {}
