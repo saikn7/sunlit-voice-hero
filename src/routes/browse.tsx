@@ -69,9 +69,21 @@ function BrowsePage() {
   const filtered = React.useMemo(() => {
     let list = donations;
     if (category !== "all") {
-      list = list.filter((d) =>
-        (d.keywords ?? []).some((k) => k.toLowerCase().includes(category)),
-      );
+      const cat = CATEGORIES.find((c) => c.id === category);
+      if (category === "other") {
+        // "Other" = no recognised category keyword in keywords/title/description
+        list = list.filter((d) => {
+          const hay = [...(d.keywords ?? []), d.title ?? "", d.description ?? ""]
+            .join(" ").toLowerCase();
+          return !KNOWN_CAT_KEYWORDS.some((k) => hay.includes(k));
+        });
+      } else if (cat) {
+        list = list.filter((d) => {
+          const hay = [...(d.keywords ?? []), d.title ?? "", d.description ?? ""]
+            .join(" ");
+          return cat.match.test(hay);
+        });
+      }
     }
     if (query.trim()) list = fuzzySearch(list, query);
     return list;
