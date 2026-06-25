@@ -24,12 +24,27 @@ export function VoiceNav() {
   const { lang } = usePrefs();
   const [listening, setListening] = React.useState(false);
   const [hint, setHint] = React.useState<string>("");
+  const [subtitle, setSubtitle] = React.useState<string>("");
   const recognizerRef = React.useRef<any>(null);
+  const hintTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subtitleTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showHint = React.useCallback((msg: string, ms = 3500) => {
+    setHint(msg);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setHint(""), ms);
+  }, []);
+
+  const showSubtitle = React.useCallback((msg: string, ms = 4000) => {
+    setSubtitle(msg);
+    if (subtitleTimerRef.current) clearTimeout(subtitleTimerRef.current);
+    subtitleTimerRef.current = setTimeout(() => setSubtitle(""), ms);
+  }, []);
 
   const respond = React.useCallback((msg: string) => {
-    setHint(msg);
+    showHint(msg);
     speak(msg, { lang });
-  }, [lang]);
+  }, [lang, showHint]);
 
   const handle = React.useCallback((raw: string) => {
     const text = (raw || "").trim().toLowerCase();
