@@ -151,9 +151,13 @@ function WelcomeGreeter() {
     if (!demoMode && window.sessionStorage.getItem("sv_greeted") === "1") return;
     const greet = () => {
       window.sessionStorage.setItem("sv_greeted", "1");
-      speak(t("welcomeGreeting"), { lang, rate: demoMode ? 1.1 : 1 });
       window.removeEventListener("pointerdown", greet);
       window.removeEventListener("keydown", greet);
+      // Defer speech off the input frame so click handlers (theme toggle,
+      // nav, etc.) can commit/paint before the browser warms up voices.
+      setTimeout(() => {
+        speak(t("welcomeGreeting"), { lang, rate: demoMode ? 1.1 : 1 });
+      }, 600);
     };
     window.addEventListener("pointerdown", greet, { once: true });
     window.addEventListener("keydown", greet, { once: true });
