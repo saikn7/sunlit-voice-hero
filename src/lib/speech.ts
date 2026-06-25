@@ -64,6 +64,8 @@ export function speak(text: string, opts: SpeakOptions = {}) {
       u.lang = LANG_TAG[lang];
       u.rate = opts.rate ?? 1;
       u.pitch = opts.pitch ?? 1;
+      const voice = pickVoice(lang);
+      if (voice) u.voice = voice;
       u.onstart = () => opts.onStart?.();
       u.onend = () => opts.onEnd?.();
       u.onerror = () => opts.onEnd?.();
