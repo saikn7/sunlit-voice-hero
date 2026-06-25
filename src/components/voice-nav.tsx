@@ -302,8 +302,6 @@ export function VoiceNav() {
       </button>
 
       {typeMode && !isIOS && (
-
-      {typeMode && (
         <form
           onSubmit={submitTyped}
           className="fixed bottom-24 right-5 z-50 flex max-w-[92vw] items-center gap-2 rounded-2xl border border-border bg-card/95 p-2 shadow-elevated"
