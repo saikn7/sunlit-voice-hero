@@ -104,9 +104,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const antiFlash = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';}}catch(e){}})();`;
   return (
     <html lang="en">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: antiFlash }} />
         <HeadContent />
       </head>
       <body>

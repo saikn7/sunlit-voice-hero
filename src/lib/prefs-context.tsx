@@ -19,7 +19,7 @@ type PrefsCtx = {
 
 const Ctx = React.createContext<PrefsCtx | null>(null);
 const LS_LANG = "sv_lang";
-const LS_THEME = "sv_theme";
+const LS_THEME = "theme";
 const LS_CONTRAST = "sv_contrast";
 const LS_DEMO = "sv_demo";
 
@@ -48,7 +48,7 @@ function detectInitialTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(LS_THEME) as Theme | null;
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 }
 
 export function PrefsProvider({ children }: { children: React.ReactNode }) {
